@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LLM Evaluation Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <header class="header">
+        <a href="/" class="logo">LLM Evaluator</a>
+        <i class="fa-solid fa-bars" id="menu-icon"></i>
+        <nav class="navbar">
+            <a href="/" class="nav-link active">Home</a>
+            <a href="/#features" class="nav-link">Features</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/#about" class="nav-link">About</a>
+            <a href="/#contact" class="nav-link">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 LLM Evaluation Dashboard. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://github.com/Harshita26705" target="_blank"><i class="fa-brands fa-github"></i></a>
+                <a href="https://linkedin.com/in/harshita-suri" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+            </div>
+        </div>
+        <div class="footer-icon">
+            <a href="#home" id="scroll-top"><i class="fa-solid fa-angle-up"></i></a>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

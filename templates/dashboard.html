@@ -1,0 +1,861 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation Dashboard - LLM Evaluator{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero">
+    <div class="dashboard-header">
+        <h1>LLM Evaluation <span>Dashboard</span></h1>
+        <p>Advanced metrics for comprehensive LLM response analysis</p>
+    </div>
+</section>
+
+<section class="dashboard-container">
+    <div class="tabs-header">
+        <button class="tab-btn active" data-tab="single-response">
+            <i class="fa-solid fa-message"></i> Single Response
+        </button>
+        <button class="tab-btn" data-tab="hallucination">
+            <i class="fa-solid fa-triangle-exclamation"></i> Hallucination
+        </button>
+        <button class="tab-btn" data-tab="bias">
+            <i class="fa-solid fa-scale-balanced"></i> Bias Detection
+        </button>
+        <button class="tab-btn" data-tab="toxicity">
+            <i class="fa-solid fa-shield-virus"></i> Toxicity
+        </button>
+        <button class="tab-btn" data-tab="multi-model">
+            <i class="fa-solid fa-code-compare"></i> Multi-Model
+        </button>
+        <button class="tab-btn" data-tab="code-analysis">
+            <i class="fa-solid fa-code"></i> Code Analysis
+        </button>
+        <button class="tab-btn" data-tab="multimodal">
+            <i class="fa-solid fa-images"></i> Multimodal
+        </button>
+    </div>
+
+    <!-- Tab 1: Single Response Evaluation -->
+    <div class="tab-content active" id="single-response">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Single Response Evaluation</h3>
+                <div class="input-group">
+                    <label>Reference/Query Text</label>
+                    <textarea id="sr-reference" placeholder="Enter reference or query text..." rows="4"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Model Response</label>
+                    <textarea id="sr-response" placeholder="Enter model response..." rows="4"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="evaluateSingleResponse()">
+                    <i class="fa-solid fa-zap"></i> Analyze Response
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Evaluation Results</h3>
+                <div id="sr-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Hallucination Detection -->
+    <div class="tab-content" id="hallucination">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Hallucination Detection</h3>
+                <p class="tab-desc">Detect unsupported claims and factually incorrect information in responses.</p>
+                <div class="input-group">
+                    <label>Reference/Source Text</label>
+                    <textarea id="hall-reference" placeholder="Enter source text..." rows="5"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Model Response</label>
+                    <textarea id="hall-response" placeholder="Enter model response..." rows="5"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="detectHallucination()">
+                    <i class="fa-solid fa-magnifying-glass"></i> Detect Hallucinations
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Analysis Results</h3>
+                <div id="hall-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Bias Detection -->
+    <div class="tab-content" id="bias">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Bias Detection</h3>
+                <p class="tab-desc">Identify gender bias, demographic biases, and fairness issues in text.</p>
+                <div class="input-group">
+                    <label>Model Response</label>
+                    <textarea id="bias-text" placeholder="Enter response to analyze..." rows="6"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="detectBias()">
+                    <i class="fa-solid fa-balance-scale"></i> Analyze Bias
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Bias Analysis Results</h3>
+                <div id="bias-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Toxicity Detection -->
+    <div class="tab-content" id="toxicity">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Toxicity Detection</h3>
+                <p class="tab-desc">Check for toxic, harmful, or inappropriate language in responses.</p>
+                <div class="input-group">
+                    <label>Text to Analyze</label>
+                    <textarea id="tox-text" placeholder="Enter text to check for toxicity..." rows="6"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="checkToxicity()">
+                    <i class="fa-solid fa-virus"></i> Check Toxicity
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Toxicity Analysis</h3>
+                <div id="tox-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: Multi-Model Comparison -->
+    <div class="tab-content" id="multi-model">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Multi-Model Comparison</h3>
+                <p class="tab-desc">Compare outputs from different LLMs for the same question.</p>
+                <div class="input-group">
+                    <label>Question/Prompt</label>
+                    <textarea id="mmc-question" placeholder="Enter the question..." rows="3"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Model 1 Name</label>
+                    <input type="text" id="mmc-model1-name" placeholder="e.g., GPT-4">
+                </div>
+                <div class="input-group">
+                    <label>Model 1 Response</label>
+                    <textarea id="mmc-model1-response" placeholder="Enter Model 1 response..." rows="4"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Model 2 Name</label>
+                    <input type="text" id="mmc-model2-name" placeholder="e.g., Claude">
+                </div>
+                <div class="input-group">
+                    <label>Model 2 Response</label>
+                    <textarea id="mmc-model2-response" placeholder="Enter Model 2 response..." rows="4"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Model 3 Name (Optional)</label>
+                    <input type="text" id="mmc-model3-name" placeholder="e.g., Gemini">
+                </div>
+                <div class="input-group">
+                    <label>Model 3 Response (Optional)</label>
+                    <textarea id="mmc-model3-response" placeholder="Enter Model 3 response..." rows="4"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="compareModels()">
+                    <i class="fa-solid fa-code-compare"></i> Compare Models
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Comparison Results</h3>
+                <div id="mmc-results" class="results-placeholder">
+                    <p>Results will appear here after comparison</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 6: Code Analysis -->
+    <div class="tab-content" id="code-analysis">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>Code Quality Analysis</h3>
+                <p class="tab-desc">Analyze code generated by LLMs for quality, complexity, and best practices.</p>
+                <div class="input-group">
+                    <label>Programming Language</label>
+                    <select id="code-language" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 2px solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem; font-size: 1.4rem;">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="csharp">C#</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Code to Analyze</label>
+                    <div class="code-editor-container">
+                        <textarea id="code-input" placeholder="Paste the code here..." rows="12" class="code-editor"></textarea>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="analyzeCode()">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Code
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>Code Analysis Results</h3>
+                <div id="code-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 7: AI Image Generation Evaluation -->
+    <div class="tab-content" id="multimodal">
+        <div class="eval-container">
+            <div class="eval-input">
+                <h3>🎨 AI Image Generation Evaluation</h3>
+                <p class="tab-desc">Evaluate how accurately AI generated an image from your prompt (Stable Diffusion, DALL-E, Midjourney, etc.)</p>
+                <div class="input-group">
+                    <label>📸 Upload AI-Generated Image</label>
+                    <input type="file" id="mm-image" accept="image/*" onchange="previewImage()" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 2px solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem;">
+                    <img id="image-preview" style="display:none; max-width:100%; margin-top:1rem; border-radius:1rem; border: 2px solid var(--main-color);">
+                </div>
+                <div class="input-group">
+                    <label>📝 Original Prompt (What you asked the AI to create)</label>
+                    <textarea id="mm-prompt" placeholder="Enter the prompt you used to generate this image..." rows="4"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>🔍 Image Description (What you actually see in the generated image)</label>
+                    <textarea id="mm-description" placeholder="Describe what you see in the generated image..." rows="4"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="evaluateMultimodal()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Evaluate AI Generation Accuracy
+                </button>
+            </div>
+
+            <div class="eval-output">
+                <h3>📊 Accuracy Analysis</h3>
+                <div id="mm-results" class="results-placeholder">
+                    <p>Results will appear here after analysis</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            const tabId = btn.dataset.tab;
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        });
+    });
+
+    // API Functions
+    async function evaluateSingleResponse() {
+        const reference = document.getElementById('sr-reference').value.trim();
+        const response = document.getElementById('sr-response').value.trim();
+        const resultsDiv = document.getElementById('sr-results');
+
+        if (!reference || !response) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide both reference and response text.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Analyzing...</p>';
+
+        try {
+            const res = await fetch('/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reference, response })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                resultsDiv.innerHTML = formatResults(data);
+            } else {
+                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    async function detectHallucination() {
+        const reference = document.getElementById('hall-reference').value.trim();
+        const response = document.getElementById('hall-response').value.trim();
+        const resultsDiv = document.getElementById('hall-results');
+
+        if (!reference || !response) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide both reference and response text.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Analyzing...</p>';
+
+        try {
+            const res = await fetch('/api/detect-hallucination', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reference, response })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <h4>Hallucination Risk Score</h4>
+                        <div class="score-display" style="color: ${getRiskColor(data.hallucination_risk)}">
+                            ${(data.hallucination_risk * 100).toFixed(1)}%
+                        </div>
+                        <h4 style="margin-top: 2rem;">Hallucinated Entities</h4>
+                        <p>${data.hallucinated_entities.length > 0 ? data.hallucinated_entities.join(', ') : 'None detected'}</p>
+                        <p style="margin-top: 1.5rem; color: #999; font-size: 0.9rem;">${data.explanation}</p>
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    async function detectBias() {
+        const text = document.getElementById('bias-text').value.trim();
+        const resultsDiv = document.getElementById('bias-results');
+
+        if (!text) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide text to analyze.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Analyzing...</p>';
+
+        try {
+            const res = await fetch('/api/detect-bias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <h4>Bias Score</h4>
+                        <div class="score-display" style="color: ${getScoreColor(data.bias_score)}">
+                            ${(data.bias_score * 100).toFixed(1)}%
+                        </div>
+                        <h4 style="margin-top: 2rem;">Entity Analysis</h4>
+                        <ul>
+                            ${Object.entries(data.entity_analysis).map(([k, v]) => 
+                                `<li><strong>${k}:</strong> ${v} mentions</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    async function checkToxicity() {
+        const text = document.getElementById('tox-text').value.trim();
+        const resultsDiv = document.getElementById('tox-results');
+
+        if (!text) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide text to analyze.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<p><i class="fa-solid fa-spinner fa-spin"></i> Analyzing...</p>';
+
+        try {
+            const res = await fetch('/api/check-toxicity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <h4>Toxicity Level</h4>
+                        <div class="score-display" style="color: ${getScoreColor(data.toxicity_score)}">
+                            ${(data.toxicity_score * 100).toFixed(1)}%
+                        </div>
+                        <h4 style="margin-top: 2rem;">Safety Status</h4>
+                        <p style="font-size: 1.2rem; color: ${data.is_safe ? '#00ff00' : '#ff0000'}">
+                            ${data.is_safe ? '✅ Safe Content' : '⚠️ Contains Toxic Language'}
+                        </p>
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    async function evaluateMultimodal() {
+        const imageFile = document.getElementById('mm-image').files[0];
+        const prompt = document.getElementById('mm-prompt').value.trim();
+        const description = document.getElementById('mm-description').value.trim();
+        const resultsDiv = document.getElementById('mm-results');
+
+        if (!imageFile || !prompt) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide both an AI-generated image and the prompt you used.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<div class="loading">Evaluating AI generation accuracy...</div>';
+
+        try {
+            // Read image as base64
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const imageData = e.target.result;
+
+                const response = await fetch('/api/evaluate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        image: imageData, 
+                        prompt: prompt,
+                        description: description 
+                    })
+                });
+
+                if (!response.ok) throw new Error('Evaluation failed');
+
+                const data = await response.json();
+                
+                let html = '';
+                
+                // Accuracy Cards (Vertical with flex-wrap)
+                html += '<div class="results-grid multimodal-grid">';
+                
+                if (data.metrics) {
+                    const metrics = data.metrics;
+                    
+                    // Overall Accuracy (highlighted)
+                    if (metrics['Overall Accuracy'] !== undefined) {
+                        const accuracy = metrics['Overall Accuracy'];
+                        let accuracyColor = accuracy > 0.8 ? '#00ff88' : accuracy > 0.6 ? '#00bcd4' : accuracy > 0.4 ? '#ffaa00' : '#ff4444';
+                        html += `<div class="result-item highlight"><h4>Overall Accuracy</h4><div class="score" style="color: ${accuracyColor}; font-size: 2.5rem;">${(accuracy * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // Prompt Match Score
+                    if (metrics['Prompt-Image Match Score'] !== undefined && metrics['Prompt-Image Match Score'] !== 'N/A') {
+                        html += `<div class="result-item"><h4>Prompt Match</h4><div class="score">${(metrics['Prompt-Image Match Score'] * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // ROUGE-1 Score
+                    if (metrics['Keyword Overlap (ROUGE-1)'] !== undefined) {
+                        html += `<div class="result-item"><h4>Keyword Coverage</h4><div class="score">${(metrics['Keyword Overlap (ROUGE-1)'] * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // Relevance
+                    if (metrics['Relevance to Prompt'] !== undefined) {
+                        html += `<div class="result-item"><h4>Relevance</h4><div class="score">${(metrics['Relevance to Prompt'] * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // Coherence
+                    if (metrics['Description Coherence'] !== undefined) {
+                        html += `<div class="result-item"><h4>Coherence</h4><div class="score">${(metrics['Description Coherence'] * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // Hallucination Risk
+                    if (metrics['Hallucination Risk'] !== undefined) {
+                        const hallRisk = metrics['Hallucination Risk'];
+                        let hallColor = hallRisk < 0.3 ? '#00ff88' : hallRisk < 0.6 ? '#ffaa00' : '#ff4444';
+                        html += `<div class="result-item"><h4>Hallucination Risk</h4><div class="score" style="color: ${hallColor};">${(hallRisk * 100).toFixed(1)}%</div></div>`;
+                    }
+                    
+                    // Safety Score
+                    if (metrics['Safety Score'] !== undefined) {
+                        html += `<div class="result-item"><h4>Safety Score</h4><div class="score">${(metrics['Safety Score'] * 100).toFixed(1)}%</div></div>`;
+                    }
+                }
+                
+                html += '</div>';
+                
+                // Detailed Explanation
+                if (data.explanation) {
+                    html += '<div class="result-card" style="margin-top: 2rem;">';
+                    html += '<h4>📋 Detailed Analysis</h4>';
+                    html += `<pre style="white-space: pre-wrap; background: var(--bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.1rem;">${data.explanation}</pre>`;
+                    html += '</div>';
+                }
+                
+                // Image Properties
+                if (data.image_properties) {
+                    html += '<div class="result-card" style="margin-top: 2rem;">';
+                    html += '<h4>📐 Image Properties</h4>';
+                    html += '<div style="margin-top: 1rem;">';
+                    Object.entries(data.image_properties).forEach(([key, value]) => {
+                        if (key !== 'error') {
+                            html += `<p style="margin-bottom: 0.8rem;"><strong>${key}:</strong> ${value}</p>`;
+                        }
+                    });
+                    html += '</div></div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+            };
+            
+            reader.readAsDataURL(imageFile);
+
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    function previewImage() {
+        const file = document.getElementById('mm-image').files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('image-preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function formatResults(data) {
+        return `
+            <div class="results-grid">
+                <div class="result-item">
+                    <h4>Semantic Similarity</h4>
+                    <div class="score">${(data.semantic_similarity * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item">
+                    <h4>ROUGE-1 F1</h4>
+                    <div class="score">${(data.rouge1_f1 * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item">
+                    <h4>Coherence</h4>
+                    <div class="score">${(data.coherence * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item">
+                    <h4>Toxicity</h4>
+                    <div class="score" style="color: ${getScoreColor(data.toxicity_penalty)}">${(data.toxicity_penalty * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item">
+                    <h4>Bias</h4>
+                    <div class="score" style="color: ${getScoreColor(data.bias_penalty)}">${(data.bias_penalty * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item">
+                    <h4>Hallucination Risk</h4>
+                    <div class="score" style="color: ${getRiskColor(data.hallucination_risk)}">${(data.hallucination_risk * 100).toFixed(1)}%</div>
+                </div>
+                <div class="result-item highlight">
+                    <h4>Final Score</h4>
+                    <div class="score" style="color: #00ff00; font-size: 2rem;">${(data.final_score * 100).toFixed(1)}%</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getScoreColor(score) {
+        if (score < 0.3) return '#00ff00';
+        if (score < 0.6) return '#ffff00';
+        return '#ff0000';
+    }
+
+    function getRiskColor(risk) {
+        if (risk < 0.3) return '#00ff00';
+        if (risk < 0.6) return '#ffff00';
+        return '#ff0000';
+    }
+
+    // Multi-Model Comparison
+    async function compareModels() {
+        const question = document.getElementById('mmc-question').value.trim();
+        const model1Name = document.getElementById('mmc-model1-name').value.trim();
+        const model1Response = document.getElementById('mmc-model1-response').value.trim();
+        const model2Name = document.getElementById('mmc-model2-name').value.trim();
+        const model2Response = document.getElementById('mmc-model2-response').value.trim();
+        const model3Name = document.getElementById('mmc-model3-name').value.trim();
+        const model3Response = document.getElementById('mmc-model3-response').value.trim();
+        const resultsDiv = document.getElementById('mmc-results');
+
+        if (!question || !model1Name || !model1Response || !model2Name || !model2Response) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide question and at least 2 models for comparison.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<div class="loading">Comparing models...</div>';
+
+        try {
+            const models = [
+                { name: model1Name, response: model1Response },
+                { name: model2Name, response: model2Response }
+            ];
+            
+            if (model3Name && model3Response) {
+                models.push({ name: model3Name, response: model3Response });
+            }
+
+            const response = await fetch('/api/compare-models', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, models })
+            });
+
+            if (!response.ok) throw new Error('Comparison failed');
+
+            const data = await response.json();
+            
+            let html = '<div class="comparison-container">';
+            html += `<div class="comparison-header"><h4>Comparing ${models.length} Models</h4></div>`;
+            
+            html += '<table class="comparison-table">';
+            html += '<thead><tr><th>Model</th><th>Relevance</th><th>ROUGE-1</th><th>Coherence</th><th>Toxicity</th><th>Bias</th><th>Overall</th></tr></thead>';
+            html += '<tbody>';
+            
+            data.comparisons.forEach((comp, idx) => {
+                const isWinner = idx === data.winner_index;
+                const rowClass = isWinner ? 'winner-row' : '';
+                html += `<tr class="${rowClass}">`;
+                html += `<td><strong>${comp.model_name}</strong> ${isWinner ? '🏆' : ''}</td>`;
+                html += `<td>${(comp.relevance * 100).toFixed(1)}%</td>`;
+                html += `<td>${(comp.rouge1_f1 * 100).toFixed(1)}%</td>`;
+                html += `<td>${(comp.coherence * 100).toFixed(1)}%</td>`;
+                html += `<td style="color: ${getScoreColor(comp.toxicity_penalty)}">${(comp.toxicity_penalty * 100).toFixed(1)}%</td>`;
+                html += `<td style="color: ${getScoreColor(comp.bias_penalty)}">${(comp.bias_penalty * 100).toFixed(1)}%</td>`;
+                html += `<td><strong style="color: #00ff00">${(comp.final_score * 100).toFixed(1)}%</strong></td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            html += `<div class="winner-announcement"><h3>🏆 Winner: ${data.winner}</h3></div>`;
+            html += '</div>';
+            
+            resultsDiv.innerHTML = html;
+
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    // Code Analysis
+    async function analyzeCode() {
+        const code = document.getElementById('code-input').value.trim();
+        const language = document.getElementById('code-language').value;
+        const resultsDiv = document.getElementById('code-results');
+
+        if (!code) {
+            resultsDiv.innerHTML = '<div class="error-message">Please provide code to analyze.</div>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '<div class="loading">Analyzing code...</div>';
+
+        try {
+            const response = await fetch('/api/analyze-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language })
+            });
+
+            if (!response.ok) throw new Error('Analysis failed');
+
+            const data = await response.json();
+            
+            let html = '';
+            
+            // 1. Metrics Cards on Top
+            html += '<div class="results-grid">';
+            if (data.metrics) {
+                html += `<div class="result-item"><h4>Total Lines</h4><div class="score">${data.metrics['Total Lines']}</div></div>`;
+                html += `<div class="result-item"><h4>Code Lines</h4><div class="score">${data.metrics['Code Lines']}</div></div>`;
+                html += `<div class="result-item"><h4>Functions</h4><div class="score">${data.metrics['Functions']}</div></div>`;
+                html += `<div class="result-item"><h4>Classes</h4><div class="score">${data.metrics['Classes']}</div></div>`;
+                html += `<div class="result-item"><h4>Comments</h4><div class="score">${data.metrics['Comment Lines']}</div></div>`;
+                html += `<div class="result-item"><h4>Imports</h4><div class="score">${data.metrics['Imports']}</div></div>`;
+            }
+            html += '</div>';
+            
+            // 2. Code Quality Score
+            const hasErrors = data.errors && data.errors.length > 0;
+            const suggestionCount = data.suggestions ? data.suggestions.length : 0;
+            const score = data.quality_score !== undefined ? data.quality_score : calculateCodeQualityScore(data.metrics, hasErrors, suggestionCount);
+            
+            let grade = 'A+';
+            let gradeColor = '#00ff88';
+            
+            if (score < 0.5) {
+                grade = 'F';
+                gradeColor = '#ff4444';
+            } else if (score < 0.6) {
+                grade = 'D';
+                gradeColor = '#ff8844';
+            } else if (score < 0.7) {
+                grade = 'C';
+                gradeColor = '#ffaa00';
+            } else if (score < 0.8) {
+                grade = 'B';
+                gradeColor = '#88ff00';
+            } else if (score < 0.9) {
+                grade = 'A';
+                gradeColor = '#00ff88';
+            }
+            
+            html += '<div class="code-quality-score">';
+            html += '<h3>📊 Code Quality Score</h3>';
+            html += `<div class="quality-grade" style="color: ${gradeColor};">${grade}</div>`;
+            html += `<p style="font-size: 1.6rem; color: #aaa;">Score: ${(score * 100).toFixed(1)}%</p>`;
+            html += '</div>';
+            
+            // 3. Suggestions and Errors Cards
+            const hasSuggestions = data.suggestions && data.suggestions.length > 0;
+            
+            if (hasSuggestions || hasErrors) {
+                html += '<div class="results-grid">';
+                
+                if (hasSuggestions) {
+                    html += '<div class="result-card" style="flex: 1 1 calc(50% - 1rem); border-color: #00ff88;"><h4>💡 Suggestions</h4><ul style="margin-left: 2rem; margin-top: 1rem;">';
+                    data.suggestions.forEach(suggestion => {
+                        const color = suggestion.includes('✅') ? '#00ff88' : suggestion.includes('⚠️') ? '#ffaa00' : '#ffffff';
+                        html += `<li style="margin-bottom: 0.8rem; color: ${color}; font-size: 1.3rem;">${suggestion}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                
+                if (hasErrors) {
+                    html += '<div class="result-card" style="flex: 1 1 calc(50% - 1rem); border-color: #ff4444;"><h4>🚨 Errors Found</h4><ul style="margin-left: 2rem; margin-top: 1rem;">';
+                    data.errors.forEach(error => {
+                        html += `<li style="margin-bottom: 0.8rem; color: #ff4444; font-size: 1.3rem;">${error}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            // 4. Code Explanation
+            if (data.explanation) {
+                html += '<div class="result-card" style="margin-top: 2rem;">';
+                html += '<h4>📝 Code Explanation</h4>';
+                html += `<pre style="white-space: pre-wrap; background: var(--snd-bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.3rem; color: #ddd;">${data.explanation}</pre>`;
+                html += '</div>';
+            }
+            
+            // 5. Improved Code with Copy Button
+            if (data.improved_code && data.syntax_valid) {
+                html += '<div style="margin-top: 2rem;">';
+                html += '<div class="code-editor-header">';
+                html += '<h4>✨ Improved Code</h4>';
+                html += `<button class="copy-btn" onclick="copyImprovedCode()"><i class="fa-solid fa-copy"></i> Copy Code</button>`;
+                html += '</div>';
+                html += `<pre id="improved-code-output" class="code-editor" style="margin-top: 0; border-radius: 0 0 0.8rem 0.8rem;">${escapeHtml(data.improved_code)}</pre>`;
+                html += '</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+
+        } catch (error) {
+            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+        }
+    }
+
+    function escapeHtml(text) {
+        const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function copyImprovedCode() {
+        const codeElement = document.getElementById('improved-code-output');
+        if (codeElement) {
+            const code = codeElement.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target.closest('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                btn.style.background = '#00ff88';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code:', err);
+            });
+        }
+    }
+
+    function calculateCodeQualityScore(metrics, hasErrors, suggestionCount) {
+        if (!metrics) return 0.7;
+        
+        let score = 0.7; // Base score
+        
+        // Deduct for errors
+        if (hasErrors) {
+            score -= 0.3;
+        }
+        
+        // Bonus for comments
+        const totalLines = metrics['Total Lines'] || 1;
+        const commentLines = metrics['Comment Lines'] || 0;
+        const commentRatio = commentLines / totalLines;
+        
+        if (commentRatio > 0.15) {
+            score += 0.1;
+        } else if (commentRatio < 0.05) {
+            score -= 0.1;
+        }
+        
+        // Deduct for too many suggestions
+        if (suggestionCount > 5) {
+            score -= 0.1;
+        } else if (suggestionCount > 3) {
+            score -= 0.05;
+        }
+        
+        // Deduct for very long functions (complexity indicator)
+        const codeLines = metrics['Code Lines'] || 1;
+        const functions = metrics['Functions'] || 1;
+        const avgFunctionLength = codeLines / functions;
+        
+        if (avgFunctionLength > 100) {
+            score -= 0.15;
+        } else if (avgFunctionLength < 20) {
+            score += 0.05;
+        }
+        
+        // Keep score in valid range
+        return Math.max(0, Math.min(1, score));
+    }
+</script>
+{% endblock %}

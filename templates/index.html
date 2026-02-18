@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}LLM Evaluation Dashboard - Advanced AI Evaluation Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="home" id="home">
+    <div class="home-content">
+        <h3>Welcome to</h3>
+        <h1>LLM Evaluation<span class="gradient-text">Pro</span></h1>
+        <h3>Advanced <span>AI-Powered</span> Response Evaluation Platform</h3>
+        <p>Evaluate, analyze, and optimize Large Language Model responses with advanced metrics including semantic similarity, toxicity detection, bias analysis, and hallucination detection. Built for researchers, developers, and AI enthusiasts.</p>
+        
+        <div class="social-media">
+            <a href="https://github.com" target="_blank" title="GitHub"><i class="fa-brands fa-github"></i></a>
+            <a href="https://linkedin.com" target="_blank" title="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="https://twitter.com" target="_blank" title="Twitter"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+        
+        <a href="/dashboard" class="btn">Get Started</a>
+    </div>
+    
+    <div class="hero-visual">
+        <div class="blob-shape"></div>
+        <div class="floating-card card-1">
+            <i class="fa-solid fa-brain"></i>
+            <p>AI Metrics</p>
+        </div>
+        <div class="floating-card card-2">
+            <i class="fa-solid fa-shield-halved"></i>
+            <p>Safety Check</p>
+        </div>
+        <div class="floating-card card-3">
+            <i class="fa-solid fa-chart-line"></i>
+            <p>Analytics</p>
+        </div>
+    
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" id="features">
+    <h2 class="heading">Key <span>Features</span></h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <h3>Semantic Analysis</h3>
+            <p>Advanced semantic similarity scoring using transformer embeddings to compare responses with reference text.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-shield-virus"></i>
+            </div>
+            <h3>Safety Detection</h3>
+            <p>Detects toxicity, harmful language, and inappropriate content in LLM responses automatically.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <h3>Bias Analysis</h3>
+            <p>Identifies gender bias, demographic bias, and fairness issues in generated text.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3>Hallucination Detection</h3>
+            <p>Detects unsupported claims and factually incorrect information in responses.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-code"></i>
+            </div>
+            <h3>Code Quality</h3>
+            <p>Analyzes Python code quality, syntax validation, and structural issues.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fa-solid fa-images"></i>
+            </div>
+            <h3>Multimodal Support</h3>
+            <p>Evaluate image descriptions, captions, and multimodal AI models.</p>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about" id="about">
+    <div class="about-content">
+        <h2 class="heading">About <span>LLM Evaluator</span></h2>
+        <h3>Comprehensive LLM Evaluation Suite</h3>
+        <p>LLM Evaluation Dashboard is an enterprise-grade platform designed to assess Large Language Model responses across multiple critical dimensions. Whether you're developing AI systems, fine-tuning models, or conducting research, our comprehensive evaluation metrics provide deep insights into response quality, safety, fairness, and factuality.</p>
+        
+        <p>Our platform combines state-of-the-art NLP techniques with intuitive interfaces to make advanced evaluation accessible to everyone. From semantic similarity using transformer embeddings to toxicity detection powered by deep learning, we cover the full spectrum of evaluation needs.</p>
+
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Why Choose LLM Evaluator?</h3>
+        <ul class="benefits-list">
+            <li><strong>🎯 Comprehensive Metrics:</strong> 9+ evaluation dimensions in a single platform</li>
+            <li><strong>⚡ Real-time Analysis:</strong> Instant feedback on response quality</li>
+            <li><strong>🔒 Enterprise-Ready:</strong> Secure, scalable, and production-ready</li>
+            <li><strong>📊 Detailed Analytics:</strong> Batch evaluation with downloadable reports</li>
+            <li><strong>🎨 User-Friendly:</strong> Beautiful, responsive interface for all users</li>
+            <li><strong>🚀 Extensible:</strong> Easy to integrate with your pipelines</li>
+        </ul>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats">
+    <div class="stats-container">
+        <div class="stat-box">
+            <h3>9+</h3>
+            <p>Evaluation Metrics</p>
+        </div>
+        <div class="stat-box">
+            <h3>5</h3>
+            <p>Evaluation Tabs</p>
+        </div>
+        <div class="stat-box">
+            <h3>Real-time</h3>
+            <p>Processing</p>
+        </div>
+        <div class="stat-box">
+            <h3>100%</h3>
+            <p>Open Source</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta" id="contact">
+    <div class="cta-content">
+        <h2>Ready to Evaluate Your LLMs?</h2>
+        <p>Start analyzing your LLM responses with our comprehensive evaluation suite today.</p>
+        <div class="cta-buttons">
+            <a href="/dashboard" class="btn btn-primary">Open Dashboard</a>
+            <a href="#" class="btn btn-secondary">Learn More</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

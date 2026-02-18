@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gradio
+*.gradio/
+flagged/
+
+# Models
+models/
+*.bin
+*.pt
+
+# Data
+*.csv
+*.json
+data/
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+htmlcov/
+
+# Misc
+.env
+.env.local
+*.egg-info/
+dist/
+build/
