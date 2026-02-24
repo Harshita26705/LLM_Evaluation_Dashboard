@@ -423,19 +423,21 @@ section {
 
 /* Stats Section */
 .stats {
-    background: var(--snd-bg-color);
-    padding: 10rem 9% !important;
+    background: var(--bg-color);
+    height: 50%;
+    padding-top: 0px;
+    /* padding: 10rem 9% !important; */
 }
 
 .stats-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr));
     gap: 3rem;
-    margin-top: 5rem;
+    margin-top: 0rem;
 }
 
 .stat-box {
-    background: var(--bg-color);
+    background: var(--snd-bg-color);
     padding: 3rem 2rem;
     border-radius: var(--border-radius);
     text-align: center;
@@ -487,11 +489,11 @@ section {
 /* Dashboard Styles */
 .dashboard-hero {
     background: linear-gradient(135deg, var(--snd-bg-color) 0%, var(--bg-color) 100%);
-    padding: 10rem 9% !important;
+    /* padding: 10rem 9% !important; */
     min-height: auto;
     text-align: center;
     border-bottom: 2px solid var(--main-color);
-    margin-top: 5rem;
+    margin-top: -50px;;
 }
 
 .dashboard-header h1 {
@@ -516,11 +518,16 @@ section {
 
 .tabs-header {
     display: flex;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
     gap: 1rem;
     margin-bottom: 3rem;
     border-bottom: 2px solid var(--snd-bg-color);
     padding-bottom: 1rem;
+    position: sticky;
+    top: 70px;
+    background: var(--bg-color);
+    z-index: 50;
+    padding-top: 1rem;
 }
 
 .tab-btn {
@@ -546,6 +553,7 @@ section {
 
 .tab-content {
     display: none;
+    min-height: 60rem;
 }
 
 .tab-content.active {
@@ -572,36 +580,38 @@ section {
     padding: 3rem;
     border-radius: var(--border-radius);
     border: 2px solid rgba(0, 240, 255, 0.2);
+    min-height: 55rem;
 }
 
 .eval-input,
 .eval-output {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
 }
 
 .eval-input h3,
 .eval-output h3 {
     font-size: 2rem;
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem 0;
     color: var(--main-color);
 }
 
 .tab-desc {
     font-size: 1.3rem;
     color: #aaa;
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem 0;
 }
 
 .input-group {
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.5rem 0;
     display: flex;
     flex-direction: column;
 }
 
 .input-group label {
     font-size: 1.3rem;
-    margin-bottom: 0.5rem;
+    margin: 0 0 0.5rem 0;
     color: var(--text-color);
     font-weight: 600;
 }
@@ -622,6 +632,10 @@ section {
 .input-group input:focus {
     border-color: var(--main-color);
     box-shadow: 0 0 1rem rgba(0, 240, 255, 0.3);
+}
+
+.eval-input .btn {
+    margin-top: 0.5rem;
 }
 
 .file-input-wrapper {
@@ -667,6 +681,27 @@ section {
     flex-wrap: wrap;
     gap: 1.5rem;
     justify-content: flex-start;
+}
+
+.code-analysis-results {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.code-analysis-row {
+    width: 100%;
+}
+
+.code-analysis-row.results-grid {
+    align-items: stretch;
+}
+
+.code-analysis-row.results-grid .result-card {
+    height: 100%;
+    flex: 1 1 0;
+    max-width: 50%;
 }
 
 .results-grid.vertical {
@@ -797,6 +832,7 @@ section {
 .code-editor {
     background: #1e1e1e;
     border: 2px solid rgba(0, 240, 255, 0.3);
+    width: 100%;
     border-radius: 0.8rem;
     padding: 1.5rem;
     font-family: 'Courier New', Consolas, Monaco, monospace;

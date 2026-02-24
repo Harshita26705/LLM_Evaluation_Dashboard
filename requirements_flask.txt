@@ -21,5 +21,13 @@ transformers==4.30.0
 # Utilities
 python-dotenv==1.0.0
 
+# Code Analysis Enhancement
+gitpython==3.1.40
+gitingest==0.1.5
+requests==2.31.0
+
+# Local AI Models (optional but recommended)
+llama-cpp-python>=0.2.0
+
 # Production
 gunicorn==21.0.0

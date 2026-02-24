@@ -26,6 +26,15 @@ from sentence_transformers import SentenceTransformer, util
 from detoxify import Detoxify
 import base64
 
+# Import enhanced code analyzer
+try:
+    from code_analyzer import get_analyzer
+    CODE_ANALYZER_AVAILABLE = True
+    print("   ✅ Loaded enhanced code analyzer (Ollama)")
+except Exception as e:
+    CODE_ANALYZER_AVAILABLE = False
+    print(f"   ⚠️ Enhanced code analyzer not available: {e}")
+
 # Try to load spaCy for enhanced NER
 try:
     import en_core_web_sm
@@ -700,6 +709,44 @@ def check_code_quality(code_str):
     
     if not results["suggestions"]:
         results["suggestions"].append("✅ Code looks good!")
+
+    # Calculate a more variable quality score (0-1)
+    total_lines = results["metrics"].get("Total Lines", 1) or 1
+    comment_lines = results["metrics"].get("Comment Lines", 0)
+    code_lines = results["metrics"].get("Code Lines", 1) or 1
+    functions_count = results["metrics"].get("Functions", 0)
+    comment_ratio = comment_lines / total_lines
+    avg_function_length = code_lines / max(functions_count, 1)
+
+    score = 0.9
+    if results["errors"]:
+        score -= 0.25
+
+    score -= min(0.3, len(results["suggestions"]) * 0.04)
+
+    if comment_ratio >= 0.15:
+        score += 0.05
+    elif comment_ratio < 0.03:
+        score -= 0.12
+    elif comment_ratio < 0.08:
+        score -= 0.05
+
+    if avg_function_length > 120:
+        score -= 0.15
+    elif avg_function_length > 60:
+        score -= 0.07
+    elif avg_function_length < 20:
+        score += 0.03
+
+    if total_lines > 300:
+        score -= 0.1
+    elif total_lines < 15:
+        score -= 0.05
+
+    if functions_count == 0 and total_lines > 30:
+        score -= 0.05
+
+    results["quality_score"] = round(max(0.1, min(0.98, score)), 3)
     
     return results
 
@@ -723,10 +770,111 @@ def api_analyze_code():
             "suggestions": results["suggestions"],
             "explanation": results["explanation"],
             "improved_code": results["improved_code"],
+            "quality_score": results.get("quality_score"),
             "language": language
         })
     except Exception as e:
         return jsonify({"error": f"Code analysis failed: {str(e)}"}), 500
+
+
+# ===== Enhanced Code Analysis Endpoints (Ollama-powered) =====
+
+@app.route('/api/analyze-code-enhanced', methods=['POST'])
+def api_analyze_code_enhanced():
+    """Enhanced code analysis using Ollama AI"""
+    if not CODE_ANALYZER_AVAILABLE:
+        return jsonify({"error": "Enhanced analyzer not available. Install dependencies and start Ollama."}), 503
+    
+    data = request.json
+    code = data.get('code', '').strip()
+    language = data.get('language', 'python').lower()
+    analysis_type = data.get('analysis_type', 'full')  # full, bugs, security, improve
+    
+    if not code:
+        return jsonify({"error": "Code is required"}), 400
+    
+    try:
+        analyzer = get_analyzer()
+        
+        if analysis_type == 'bugs':
+            result = analyzer.find_bugs(code, language)
+        elif analysis_type == 'security':
+            result = analyzer.security_analysis(code, language)
+        elif analysis_type == 'improve':
+            result = analyzer.generate_improved_code(code, language)
+        elif analysis_type == 'documentation':
+            result = analyzer.generate_documentation(code, language)
+        else:  # full analysis
+            result = analyzer.analyze_code_snippet(code, language)
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Enhanced analysis failed: {str(e)}"}), 500
+
+
+@app.route('/api/analyze-llm-code', methods=['POST'])
+def api_analyze_llm_code():
+    """Analyze LLM-generated code quality"""
+    if not CODE_ANALYZER_AVAILABLE:
+        return jsonify({"error": "Enhanced analyzer not available"}), 503
+    
+    data = request.json
+    original_prompt = data.get('prompt', '').strip()
+    generated_code = data.get('code', '').strip()
+    language = data.get('language', 'python').lower()
+    
+    if not original_prompt or not generated_code:
+        return jsonify({"error": "Both prompt and code are required"}), 400
+    
+    try:
+        analyzer = get_analyzer()
+        result = analyzer.analyze_llm_generated_code(original_prompt, generated_code, language)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"LLM code analysis failed: {str(e)}"}), 500
+
+
+@app.route('/api/analyze-repository', methods=['POST'])
+def api_analyze_repository():
+    """Analyze entire GitHub repository"""
+    if not CODE_ANALYZER_AVAILABLE:
+        return jsonify({"error": "Enhanced analyzer not available"}), 503
+    
+    data = request.json
+    repo_url = data.get('repo_url', '').strip()
+    
+    if not repo_url:
+        return jsonify({"error": "Repository URL is required"}), 400
+    
+    if not repo_url.startswith('https://github.com/'):
+        return jsonify({"error": "Only GitHub repositories are supported"}), 400
+    
+    try:
+        analyzer = get_analyzer()
+        result = analyzer.analyze_repository(repo_url)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Repository analysis failed: {str(e)}"}), 500
+
+
+@app.route('/api/analyze-git-diff', methods=['POST'])
+def api_analyze_git_diff():
+    """Analyze git diff for changelog"""
+    if not CODE_ANALYZER_AVAILABLE:
+        return jsonify({"error": "Enhanced analyzer not available"}), 503
+    
+    data = request.json
+    repo_path = data.get('repo_path', '').strip()
+    
+    if not repo_path:
+        return jsonify({"error": "Repository path is required"}), 400
+    
+    try:
+        analyzer = get_analyzer()
+        result = analyzer.analyze_git_diff(repo_path)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": f"Git diff analysis failed: {str(e)}"}), 500
 
 @app.errorhandler(404)
 def not_found(error):
