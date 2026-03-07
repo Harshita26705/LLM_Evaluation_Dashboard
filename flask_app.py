@@ -9,7 +9,9 @@ import io
 import math
 import re
 import ast
+import importlib
 import nltk
+from difflib import SequenceMatcher
 from collections import Counter
 from PIL import Image
 import numpy as np
@@ -37,11 +39,11 @@ except Exception as e:
 
 # Try to load spaCy for enhanced NER
 try:
-    import en_core_web_sm
+    en_core_web_sm = importlib.import_module("en_core_web_sm")
     nlp = en_core_web_sm.load()
     print("   ✅ Loaded spacy model")
-except Exception as e:
-    print(f"   ⚠️ Spacy model not found. Run: python -m spacy download en_core_web_sm")
+except Exception:
+    print("   ⚠️ Spacy model not found. Run: python -m spacy download en_core_web_sm")
     nlp = None
 
 # Initialize Flask app
@@ -105,16 +107,189 @@ WEIGHTS = {
 }
 
 # --- Utility Functions ---
-def unigrams(text):
-    """Extract unigrams from text"""
+TOKEN_EQUIVALENTS = {
+    "hi": "greeting",
+    "hello": "greeting",
+    "hey": "greeting",
+    "hiya": "greeting",
+    "yo": "greeting",
+    "thanks": "thank",
+    "thankyou": "thank",
+    "thx": "thank"
+}
+
+STOPWORDS = {
+    "a", "an", "the", "is", "are", "was", "were", "am", "be", "been", "being",
+    "to", "for", "of", "in", "on", "at", "with", "by", "from", "as", "it", "this",
+    "that", "these", "those", "and", "or", "but", "if", "then", "than", "so", "what",
+    "whats", "s", "do", "does", "did", "you", "your", "yours", "i", "me", "my", "we",
+    "our", "ours", "they", "them", "their", "theirs", "he", "she", "him", "her", "his",
+    "hers", "up"
+}
+
+SMALL_TALK_PROMPTS = {
+    "greeting", "hi", "hello", "hey", "whats up", "what is up", "sup", "how are you", "how r u"
+}
+
+SMALL_TALK_RESPONSES = {
+    "greeting", "nothing much", "not much", "all good", "doing well", "i am good", "i'm good",
+    "good", "fine", "hello", "hi", "hey"
+}
+
+ENTITY_LABEL_MAP = {
+    "PERSON": "PERSON",
+    "ORG": "ORG",
+    "NORP": "GROUP",
+    "GPE": "LOCATION",
+    "LOC": "LOCATION",
+    "FAC": "LOCATION",
+    "EVENT": "EVENT"
+}
+
+ENTITY_TYPE_PRIORITY = {
+    "LOCATION": 5,
+    "PERSON": 4,
+    "ORG": 4,
+    "GROUP": 3,
+    "EVENT": 2,
+    "ANIMAL": 1,
+    "UNKNOWN": 0
+}
+
+LOCATION_TYPE_WORDS = {
+    "city", "town", "village", "district", "state", "country", "capital", "province", "region", "location"
+}
+
+KNOWN_LOCATIONS = {
+    "india", "noida", "delhi", "new delhi", "mumbai", "bangalore", "bengaluru", "kolkata",
+    "hyderabad", "pune", "chennai", "gurgaon", "gurugram", "uttar pradesh", "new york",
+    "london", "paris", "tokyo", "sydney", "california", "singapore", "dubai"
+}
+
+ANIMAL_TERMS = {
+    "dog", "cat", "cow", "horse", "lion", "tiger", "elephant", "rabbit", "monkey", "bird", "fish", "snake"
+}
+
+GENERIC_ENTITY_STOPWORDS = {
+    "the", "this", "that", "these", "those", "there", "here", "today", "tomorrow", "yesterday", "none"
+}
+
+PERSON_TITLE_TERMS = {"mr", "mrs", "ms", "dr", "prof", "sir", "madam"}
+
+BIAS_GROUPS = {
+    "male": {"he", "him", "his", "man", "male", "father", "boy", "men", "boys"},
+    "female": {"she", "her", "hers", "woman", "female", "mother", "girl", "women", "girls"},
+    "white": {"white", "caucasian", "european"},
+    "black": {"black", "african"},
+    "asian": {"asian", "indian", "chinese", "japanese", "korean"},
+    "latino": {"latino", "latina", "hispanic"}
+}
+
+COLOR_KEYWORDS = {
+    "red": np.array([210, 60, 60]),
+    "blue": np.array([70, 120, 220]),
+    "green": np.array([70, 170, 90]),
+    "yellow": np.array([220, 210, 80]),
+    "orange": np.array([225, 140, 60]),
+    "purple": np.array([140, 90, 190]),
+    "pink": np.array([220, 130, 170]),
+    "black": np.array([35, 35, 35]),
+    "white": np.array([225, 225, 225]),
+    "gray": np.array([140, 140, 140]),
+    "grey": np.array([140, 140, 140])
+}
+
+BRIGHT_WORDS = {"bright", "sunny", "day", "light", "vivid"}
+DARK_WORDS = {"dark", "night", "shadow", "moody", "dim"}
+GRAYSCALE_WORDS = {"black and white", "monochrome", "grayscale", "greyscale"}
+DETAIL_WORDS = {"detailed", "intricate", "high detail", "complex"}
+
+
+def _normalize_token(token):
+    cleaned = re.sub(r"[^a-z0-9]+", "", token.lower())
+    if not cleaned:
+        return ""
+    return TOKEN_EQUIVALENTS.get(cleaned, cleaned)
+
+
+def unigrams(text, drop_stopwords=False):
+    """Extract normalized tokens from text"""
     if tokenizer is None:
-        return [t.lower() for t in text.split() if t.strip()]
-    return [t.lower() for t in tokenizer.tokenize(text) if t.strip()]
+        raw_tokens = re.findall(r"[A-Za-z0-9']+", text)
+    else:
+        raw_tokens = tokenizer.tokenize(text)
+
+    tokens = []
+    for raw_token in raw_tokens:
+        normalized = _normalize_token(raw_token)
+        if not normalized:
+            continue
+        if drop_stopwords and normalized in STOPWORDS:
+            continue
+        tokens.append(normalized)
+    return tokens
+
+
+def _safe_cosine_similarity(text_a, text_b):
+    """Compute semantic similarity with transformer fallback to lexical similarity."""
+    if not text_a.strip() or not text_b.strip():
+        return 0.0
+
+    if embedder is not None:
+        try:
+            emb_a = embedder.encode(text_a, convert_to_tensor=True)
+            emb_b = embedder.encode(text_b, convert_to_tensor=True)
+            similarity = float(util.pytorch_cos_sim(emb_a, emb_b).item())
+            return max(0.0, min(1.0, similarity))
+        except Exception:
+            pass
+
+    return SequenceMatcher(None, text_a.lower(), text_b.lower()).ratio()
+
+
+def _normalized_phrase(text):
+    tokens = unigrams(text)
+    return " ".join(tokens)
+
+
+def _is_small_talk_prompt(text):
+    normalized = _normalized_phrase(text)
+    return any(prompt in normalized for prompt in SMALL_TALK_PROMPTS)
+
+
+def _is_small_talk_response(text):
+    normalized = _normalized_phrase(text)
+    return any(resp in normalized for resp in SMALL_TALK_RESPONSES)
+
+
+def _is_echo_response(query_text, response_text):
+    if _is_small_talk_prompt(query_text) and _is_small_talk_response(response_text):
+        return False
+
+    query_tokens = set(unigrams(query_text, drop_stopwords=True))
+    response_tokens = unigrams(response_text, drop_stopwords=True)
+    if not response_tokens:
+        return False
+
+    response_set = set(response_tokens)
+    if len(response_tokens) <= 2 and response_set and response_set.issubset(query_tokens):
+        return True
+
+    q_phrase = _normalized_phrase(query_text)
+    r_phrase = _normalized_phrase(response_text)
+    return len(response_tokens) <= 3 and bool(r_phrase) and r_phrase in q_phrase
+
+
+def _clamp(value, low=0.0, high=1.0):
+    return max(low, min(high, value))
 
 def rouge1_f1(reference, candidate):
     """Calculate ROUGE-1 F1 score"""
-    ref_unigrams = unigrams(reference)
-    cand_unigrams = unigrams(candidate)
+    ref_unigrams = unigrams(reference, drop_stopwords=True)
+    cand_unigrams = unigrams(candidate, drop_stopwords=True)
+    if not ref_unigrams or not cand_unigrams:
+        return 0.0
+
     ref_counts = Counter(ref_unigrams)
     cand_counts = Counter(cand_unigrams)
     overlap = sum(min(ref_counts[t], cand_counts[t]) for t in set(ref_counts) | set(cand_counts))
@@ -122,7 +297,11 @@ def rouge1_f1(reference, candidate):
     rec = overlap / (sum(ref_counts.values()) + 1e-5)
     if prec + rec == 0:
         return 0.0
-    return 2 * prec * rec / (prec + rec)
+
+    score = 2 * prec * rec / (prec + rec)
+    if _is_echo_response(reference, candidate):
+        score *= 0.2
+    return _clamp(score)
 
 def length_fit(query_text, response_text, expected=EXPECTED_LEN_RATIO, lam=LAMBDA_LEN):
     """Evaluate response length fitness"""
@@ -138,9 +317,12 @@ def coherence_score(query_text, response_text, alpha=ALPHA_COH):
     toks = unigrams(response_text)
     if not toks:
         return 0.0
+
     unc_density = sum(1 for t in toks if t in UNCERTAINTY_MARKERS) / len(toks)
     rel = relevance_score(query_text, response_text)
-    return alpha * (1 - unc_density) + (1 - alpha) * rel
+    echo_penalty = 0.25 if _is_echo_response(query_text, response_text) else 0.0
+    score = alpha * (1 - unc_density) + (1 - alpha) * rel - echo_penalty
+    return _clamp(score)
 
 def toxicity_penalty(response_text, gamma=GAMMA_TOX):
     """Detect toxicity in text with convex penalty"""
@@ -157,34 +339,49 @@ def toxicity_penalty(response_text, gamma=GAMMA_TOX):
         penalty = 1 - math.exp(-gamma * ratio)
     return max(0.0, min(1.0, penalty))
 
-def bias_penalty(response_text, gamma=GAMMA_BIAS):
-    """Calculate bias penalty using convex function"""
-    if nlp is None:
-        # Fallback: simple keyword matching
-        toks = unigrams(response_text)
-        biased_terms = {
-            "he","him","his","man","male","father","boy",
-            "she","her","hers","woman","female","mother","girl",
-            "white","black","asian","latino","indian","african","european"
-        }
-        biased_count = sum(1 for t in toks if t in biased_terms)
-        ratio = biased_count / (len(toks) + 1e-5)
-        return 1 - math.exp(-gamma * ratio)
-    
-    try:
-        doc = nlp(response_text)
-        toks = [t.text.lower() for t in doc]
-    except Exception:
-        toks = unigrams(response_text)
-    
-    biased_terms = {
-        "he","him","his","man","male","father","boy",
-        "she","her","hers","woman","female","mother","girl",
-        "white","black","asian","latino","indian","african","european"
+def _extract_bias_counts(tokens):
+    return {group: sum(1 for token in tokens if token in words) for group, words in BIAS_GROUPS.items()}
+
+
+def bias_penalty(response_text, gamma=GAMMA_BIAS, return_breakdown=False):
+    """Calculate bias penalty based on imbalance (balanced opposites cancel out)."""
+    tokens = unigrams(response_text)
+    counts = _extract_bias_counts(tokens)
+
+    male_count = counts.get("male", 0)
+    female_count = counts.get("female", 0)
+    gender_total = male_count + female_count
+    gender_imbalance = abs(male_count - female_count) / (gender_total + 1e-5) if gender_total else 0.0
+
+    race_counts = [counts.get("white", 0), counts.get("black", 0), counts.get("asian", 0), counts.get("latino", 0)]
+    race_total = sum(race_counts)
+    non_zero_race = [count for count in race_counts if count > 0]
+
+    if race_total == 0:
+        race_imbalance = 0.0
+    elif len(non_zero_race) <= 1:
+        race_imbalance = 1.0
+    else:
+        race_imbalance = (max(non_zero_race) - min(non_zero_race)) / (race_total + 1e-5)
+
+    overall_imbalance = 0.7 * gender_imbalance + 0.3 * race_imbalance
+    penalty = 1 - math.exp(-gamma * overall_imbalance)
+    penalty = _clamp(penalty)
+
+    breakdown = {
+        "Male Terms": male_count,
+        "Female Terms": female_count,
+        "Gender Imbalance": round(gender_imbalance, 3),
+        "White Mentions": counts.get("white", 0),
+        "Black Mentions": counts.get("black", 0),
+        "Asian Mentions": counts.get("asian", 0),
+        "Latino Mentions": counts.get("latino", 0),
+        "Race Imbalance": round(race_imbalance, 3)
     }
-    biased_count = sum(1 for t in toks if t in biased_terms)
-    ratio = biased_count / (len(toks) + 1e-5)
-    return 1 - math.exp(-gamma * ratio)
+
+    if return_breakdown:
+        return penalty, breakdown
+    return penalty
 
 def detect_bias(response):
     """Detect bias in response with entity extraction"""
@@ -195,55 +392,193 @@ def detect_bias(response):
             entities = [(ent.text, ent.label_) for ent in doc.ents if ent.label_ in {"PERSON", "NORP"}]
         except Exception:
             pass
-    
-    pen = bias_penalty(response)
+
+    pen, breakdown = bias_penalty(response, return_breakdown=True)
     return {
         "Bias Penalty": round(pen, 3),
+        "Entity Analysis": breakdown,
         "Named Entities": entities
     }
 
-def detect_hallucination(reference, response):
-    """Detect hallucinations in response with entity extraction"""
-    hallucinated_entities = []
-    
-    if nlp is None:
-        # Fallback: simple string matching
-        ref_toks = set(unigrams(reference))
-        resp_toks = set(unigrams(response))
-        missing = resp_toks - ref_toks
-        f1 = len(ref_toks & resp_toks) / (len(ref_toks | resp_toks) + 1e-5)
-    else:
+
+def _normalize_entity_text(entity_text):
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s]+", "", entity_text.lower())).strip()
+
+
+def _entity_rank(entity_type, source):
+    source_bonus = 100 if source == "nlp" else 0
+    return source_bonus + ENTITY_TYPE_PRIORITY.get(entity_type, 0)
+
+
+def _infer_regex_entity_type(candidate_text, full_text):
+    normalized = _normalize_entity_text(candidate_text)
+    if not normalized or normalized in GENERIC_ENTITY_STOPWORDS:
+        return None
+
+    tokens = normalized.split()
+    text_lower = full_text.lower()
+
+    if normalized in ANIMAL_TERMS:
+        return "ANIMAL"
+
+    if normalized in KNOWN_LOCATIONS:
+        return "LOCATION"
+
+    escaped_candidate = re.escape(candidate_text.strip())
+
+    if re.search(
+        rf"\b{escaped_candidate}\s+is\s+(?:a|an)\s+(?:{'|'.join(LOCATION_TYPE_WORDS)})\b",
+        full_text,
+        flags=re.IGNORECASE
+    ):
+        return "LOCATION"
+
+    if re.search(
+        rf"\b(?:in|at|near|from)\s+{escaped_candidate}\b",
+        full_text,
+        flags=re.IGNORECASE
+    ):
+        return "LOCATION"
+
+    if len(tokens) >= 2:
+        if normalized in KNOWN_LOCATIONS or any(token in KNOWN_LOCATIONS for token in tokens):
+            return "LOCATION"
+        return "PERSON"
+
+    token = tokens[0]
+
+    if token in ANIMAL_TERMS:
+        return "ANIMAL"
+
+    if re.search(
+        rf"\b(?:{'|'.join(PERSON_TITLE_TERMS)})\.?\s+{escaped_candidate}\b",
+        text_lower,
+        flags=re.IGNORECASE
+    ):
+        return "PERSON"
+
+    if re.search(
+        rf"\b(?:i\s+am|i'm|my\s+name\s+is|name\s+is|this\s+is)\s+{escaped_candidate}\b",
+        text_lower,
+        flags=re.IGNORECASE
+    ):
+        return "PERSON"
+
+    return None
+
+
+def _extract_named_entities(text):
+    entities_by_key = {}
+
+    def upsert_entity(entity_text, entity_type, source):
+        normalized = _normalize_entity_text(entity_text)
+        if not normalized or not entity_type:
+            return
+
+        current = entities_by_key.get(normalized)
+        candidate = {"text": entity_text.strip(), "type": entity_type, "_source": source}
+
+        if current is None or _entity_rank(entity_type, source) > _entity_rank(current["type"], current["_source"]):
+            entities_by_key[normalized] = candidate
+
+    if nlp is not None:
         try:
-            ref_doc = nlp(reference)
-            resp_doc = nlp(response)
-            ref_ents = set((ent.text.lower(), ent.label_) for ent in ref_doc.ents)
-            resp_ents = set((ent.text.lower(), ent.label_) for ent in resp_doc.ents)
-            overlap = ref_ents & resp_ents
-            prec = len(overlap) / (len(resp_ents) + 1e-5)
-            rec  = len(overlap) / (len(ref_ents) + 1e-5)
-            f1 = 0.0 if (prec + rec) == 0 else (2 * prec * rec / (prec + rec))
-            hallucinated_entities = list(resp_ents - ref_ents)
+            doc = nlp(text)
+            for ent in doc.ents:
+                mapped_type = ENTITY_LABEL_MAP.get(ent.label_)
+                if mapped_type:
+                    upsert_entity(ent.text, mapped_type, "nlp")
         except Exception:
-            f1 = 0.5
-            hallucinated_entities = []
-    
+            pass
+
+    regex_candidates = re.findall(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b", text)
+    for candidate in regex_candidates:
+        inferred_type = _infer_regex_entity_type(candidate, text)
+        if inferred_type:
+            upsert_entity(candidate, inferred_type, "regex")
+
+    unique_entities = []
+    for entity in entities_by_key.values():
+        unique_entities.append({"text": entity["text"], "type": entity["type"]})
+    return unique_entities
+
+
+def _is_entity_supported(response_entity, reference_entities):
+    response_norm = _normalize_entity_text(response_entity["text"])
+    response_tokens = set(response_norm.split())
+    if not response_norm:
+        return False
+
+    for reference_entity in reference_entities:
+        reference_norm = _normalize_entity_text(reference_entity["text"])
+        reference_tokens = set(reference_norm.split())
+
+        if response_norm == reference_norm:
+            return True
+        if response_norm in reference_norm:
+            return True
+        if response_tokens and response_tokens.issubset(reference_tokens):
+            return True
+    return False
+
+def detect_hallucination(reference, response):
+    """Detect hallucinations using entity support + semantic/lexical consistency."""
+    reference_entities = _extract_named_entities(reference)
+    response_entities = _extract_named_entities(response)
+    hallucinated_entities = []
+
+    if response_entities:
+        supported_response_entities = [
+            entity for entity in response_entities if _is_entity_supported(entity, reference_entities)
+        ]
+        hallucinated_entities = [
+            entity for entity in response_entities if not _is_entity_supported(entity, reference_entities)
+        ]
+
+        if reference_entities:
+            supported_reference_entities = [
+                entity for entity in reference_entities if _is_entity_supported(entity, response_entities)
+            ]
+            precision = len(supported_response_entities) / (len(response_entities) + 1e-5)
+            recall = len(supported_reference_entities) / (len(reference_entities) + 1e-5)
+            f1 = 0.0 if (precision + recall) == 0 else (2 * precision * recall / (precision + recall))
+        else:
+            f1 = len(supported_response_entities) / (len(response_entities) + 1e-5)
+    else:
+        reference_tokens = set(unigrams(reference, drop_stopwords=True))
+        response_tokens = set(unigrams(response, drop_stopwords=True))
+        lexical_similarity = len(reference_tokens & response_tokens) / (len(reference_tokens | response_tokens) + 1e-5)
+        semantic_similarity = _safe_cosine_similarity(reference, response)
+        f1 = (0.4 * lexical_similarity) + (0.6 * semantic_similarity)
+
     toks = unigrams(response)
     unc_density = sum(1 for t in toks if t in UNCERTAINTY_MARKERS) / (len(toks) + 1e-5)
     hall_risk_unc = min(1.0, unc_density * HALL_MULT)
-    risk = (1 - f1) * 0.7 + hall_risk_unc * 0.3
-    
+    entity_penalty = min(0.25, len(hallucinated_entities) * 0.1)
+    risk = (1 - f1) * 0.75 + hall_risk_unc * 0.25 + entity_penalty
+
+    if _is_small_talk_prompt(reference) and _is_small_talk_response(response):
+        risk *= 0.7
+
+    risk = _clamp(risk)
     return round(risk, 3), hallucinated_entities
 
 def relevance_score(query, response):
-    """Calculate relevance between query and response"""
-    query_words = set(unigrams(query))
-    response_words = set(unigrams(response))
-    
-    if not query_words:
+    """Calculate relevance with lexical, semantic, and conversational intent signals."""
+    query_words = set(unigrams(query, drop_stopwords=True))
+    response_words = set(unigrams(response, drop_stopwords=True))
+
+    if not query_words and not response_words:
         return 0.0
-    
-    overlap = query_words & response_words
-    return len(overlap) / len(query_words)
+
+    overlap = len(query_words & response_words) / (len(query_words) + 1e-5) if query_words else 0.0
+    semantic = _safe_cosine_similarity(query, response)
+    small_talk_boost = 1.0 if _is_small_talk_prompt(query) and _is_small_talk_response(response) else 0.0
+
+    score = 0.45 * overlap + 0.45 * semantic + 0.10 * small_talk_boost
+    if _is_echo_response(query, response):
+        score *= 0.35
+    return _clamp(score)
 
 def composite_score(metrics):
     """Calculate composite score from all metrics"""
@@ -252,15 +587,8 @@ def composite_score(metrics):
 def evaluate_response(reference, response):
     """Evaluate a single response"""
     ensure_models_loaded()
-    if not embedder:
-        return {"error": "Models not loaded"}
-    
-    try:
-        ref_emb = embedder.encode(reference, convert_to_tensor=True)
-        resp_emb = embedder.encode(response, convert_to_tensor=True)
-        cosine_sim = float(util.pytorch_cos_sim(ref_emb, resp_emb).item())
-    except:
-        cosine_sim = 0.0
+
+    cosine_sim = _safe_cosine_similarity(reference, response)
     
     r1 = rouge1_f1(reference, response)
     len_fit = length_fit(reference, response)
@@ -357,7 +685,8 @@ def api_detect_bias():
         bias_info = detect_bias(text)
         return jsonify({
             "bias_score": round(bias_info["Bias Penalty"], 3),
-            "entity_analysis": bias_info["Named Entities"],
+            "entity_analysis": bias_info["Entity Analysis"],
+            "named_entities": bias_info["Named Entities"],
             "explanation": f"Bias Score: {bias_info['Bias Penalty']:.2f}/1.0"
         })
     except Exception as e:
@@ -422,111 +751,233 @@ def api_compare_models():
         return jsonify({"error": f"Model comparison failed: {str(e)}"}), 500
 
 def analyze_image_properties(image_data):
-    """Analyze basic image properties"""
+    """Analyze image properties and extract pixel features for prompt alignment."""
     try:
-        # Decode base64 image
         img_bytes = base64.b64decode(image_data.split(',')[1] if ',' in image_data else image_data)
-        img = Image.open(io.BytesIO(img_bytes))
-        img_array = np.array(img)
-        
+        raw_img = Image.open(io.BytesIO(img_bytes))
+        img_format = raw_img.format or "Unknown"
+        rgb_img = raw_img.convert("RGB")
+
+        analysis_img = rgb_img.copy()
+        analysis_img.thumbnail((256, 256))
+        img_array = np.array(analysis_img).astype(np.float32)
+
+        avg_color = img_array.mean(axis=(0, 1))
+        gray = img_array.mean(axis=2)
+
+        brightness = float(np.clip(gray.mean() / 255.0, 0.0, 1.0))
+        contrast = float(np.clip(gray.std() / 128.0, 0.0, 1.0))
+
+        if gray.shape[1] > 1:
+            gx = np.abs(np.diff(gray, axis=1)).mean()
+        else:
+            gx = 0.0
+
+        if gray.shape[0] > 1:
+            gy = np.abs(np.diff(gray, axis=0)).mean()
+        else:
+            gy = 0.0
+
+        edge_density = float(np.clip((gx + gy) / (2 * 255.0), 0.0, 1.0))
+
+        channel_delta = (
+            np.abs(img_array[:, :, 0] - img_array[:, :, 1]) +
+            np.abs(img_array[:, :, 1] - img_array[:, :, 2]) +
+            np.abs(img_array[:, :, 0] - img_array[:, :, 2])
+        ) / 3.0
+        grayscale_score = float(np.clip(1.0 - (channel_delta.mean() / 255.0), 0.0, 1.0))
+
+        color_strengths = {}
+        for color_name, color_rgb in COLOR_KEYWORDS.items():
+            distance = np.linalg.norm(img_array - color_rgb, axis=2)
+            color_strengths[color_name] = float(np.mean(distance < 80.0))
+
+        dominant_color = max(color_strengths.items(), key=lambda item: item[1])[0]
+
         properties = {
-            "Format": img.format or "Unknown",
-            "Size (pixels)": f"{img.width}x{img.height}",
-            "Mode": img.mode,
+            "Format": img_format,
+            "Size (pixels)": f"{raw_img.width}x{raw_img.height}",
+            "Mode": raw_img.mode,
+            "Avg Color (RGB)": f"({int(avg_color[0])}, {int(avg_color[1])}, {int(avg_color[2])})",
+            "Dominant Color": dominant_color.title(),
+            "Brightness": f"{brightness * 100:.1f}%",
+            "Contrast": f"{contrast * 100:.1f}%"
         }
-        
-        if len(img_array.shape) == 3:
-            avg_color = img_array.mean(axis=(0, 1))
-            properties["Avg Color (RGB)"] = f"({int(avg_color[0])}, {int(avg_color[1])}, {int(avg_color[2])})"
-        
-        return properties
+
+        pixel_features = {
+            "brightness": brightness,
+            "contrast": contrast,
+            "edge_density": edge_density,
+            "grayscale_score": grayscale_score,
+            "color_strengths": color_strengths,
+            "dominant_color": dominant_color
+        }
+
+        return properties, pixel_features
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)}, {}
+
+
+def _pixel_prompt_alignment(prompt_text, pixel_features):
+    """Estimate prompt-image alignment directly from pixel features."""
+    prompt_lower = prompt_text.lower()
+    prompt_tokens = set(unigrams(prompt_text))
+
+    color_mentions = [
+        color for color in COLOR_KEYWORDS.keys()
+        if re.search(rf"\\b{re.escape(color)}\\b", prompt_lower)
+    ]
+
+    if color_mentions:
+        color_scores = [
+            min(1.0, pixel_features.get("color_strengths", {}).get(color, 0.0) * 8.0)
+            for color in color_mentions
+        ]
+        color_score = sum(color_scores) / len(color_scores)
+    else:
+        color_score = 0.65
+
+    if prompt_tokens & BRIGHT_WORDS:
+        brightness_score = pixel_features.get("brightness", 0.5)
+    elif prompt_tokens & DARK_WORDS:
+        brightness_score = 1.0 - pixel_features.get("brightness", 0.5)
+    else:
+        brightness_score = 0.65
+
+    if any(keyword in prompt_lower for keyword in GRAYSCALE_WORDS):
+        grayscale_score = pixel_features.get("grayscale_score", 0.5)
+    else:
+        grayscale_score = 0.7
+
+    if any(keyword in prompt_lower for keyword in DETAIL_WORDS):
+        detail_score = pixel_features.get("edge_density", 0.5)
+    else:
+        detail_score = 0.6 + (0.4 * pixel_features.get("edge_density", 0.5))
+
+    pixel_match = _clamp(
+        0.45 * color_score +
+        0.20 * brightness_score +
+        0.15 * grayscale_score +
+        0.20 * detail_score
+    )
+
+    keyword_coverage = _clamp(0.55 * color_score + 0.20 * brightness_score + 0.25 * detail_score)
+
+    auto_tags = [pixel_features.get("dominant_color", "unknown")]
+    auto_tags.append("bright" if pixel_features.get("brightness", 0.5) >= 0.6 else "dark")
+    if pixel_features.get("grayscale_score", 0.0) >= 0.85:
+        auto_tags.append("monochrome")
+    auto_tags.append("detailed" if pixel_features.get("edge_density", 0.0) >= 0.22 else "minimal")
+
+    return {
+        "pixel_match": pixel_match,
+        "keyword_coverage": keyword_coverage,
+        "detail_score": _clamp(detail_score),
+        "auto_tags": auto_tags
+    }
 
 def multimodal_evaluate(image_data, prompt_text, description_text=None):
-    """Evaluate AI-generated image against the prompt used to create it"""
+    """Evaluate AI-generated image against prompt using pixel-first analysis."""
     if not image_data or not prompt_text.strip():
         return None, None, {}, "Please provide both an image and the prompt used to generate it."
-    
+
     try:
-        image_props = analyze_image_properties(image_data)
-        
-        # If no description provided, we can only evaluate the prompt
-        if not description_text or not description_text.strip():
-            explanation = "⚠️ No image description provided for full evaluation.\n\n"
-            explanation += f"📋 Prompt Analysis:\n"
-            explanation += f"- Prompt Length: {len(unigrams(prompt_text))} words\n"
-            explanation += f"- Image Properties: {image_props}\n\n"
-            explanation += "💡 Tip: Describe what you see in the generated image for a complete accuracy evaluation."
-            
-            return {}, image_props, {}, explanation
-        
-        # Full evaluation: Compare description vs prompt
-        if not embedder:
-            return None, image_props, {}, "Error: Embedder model not loaded"
-        
-        # Semantic similarity between prompt and what was actually generated
-        prompt_emb = embedder.encode(prompt_text, convert_to_tensor=True)
-        desc_emb = embedder.encode(description_text, convert_to_tensor=True)
-        prompt_match_score = float(util.pytorch_cos_sim(prompt_emb, desc_emb).item())
-        
-        # ROUGE score - how much of the prompt appears in the description
-        rouge = rouge1_f1(prompt_text, description_text)
-        
-        # Relevance - keyword overlap
-        relevance = relevance_score(prompt_text, description_text)
-        
-        # Coherence of the description
-        coherence = coherence_score(prompt_text, description_text)
-        
-        # Safety check
-        toxicity = toxicity_penalty(description_text)
-        
-        # Hallucination check - did the AI add things not in the prompt?
-        hall_risk, hallucinated = detect_hallucination(prompt_text, description_text)
-        
-        # Overall accuracy score
-        accuracy_score = (
-            prompt_match_score * 0.35 +
-            rouge * 0.25 +
-            relevance * 0.20 +
-            coherence * 0.15 +
-            (1 - hall_risk) * 0.05
+        image_props, pixel_features = analyze_image_properties(image_data)
+        if "error" in image_props:
+            return None, image_props, {}, f"❌ Error reading image: {image_props['error']}"
+
+        pixel_eval = _pixel_prompt_alignment(prompt_text, pixel_features)
+        has_description = bool(description_text and description_text.strip())
+
+        text_similarity = 0.0
+        text_rouge = 0.0
+        text_relevance = 0.0
+        text_coherence = 0.0
+        text_hall_risk = 1.0 - pixel_eval["pixel_match"]
+        hallucinated = []
+
+        if has_description:
+            text_similarity = _safe_cosine_similarity(prompt_text, description_text)
+            text_rouge = rouge1_f1(prompt_text, description_text)
+            text_relevance = relevance_score(prompt_text, description_text)
+            text_coherence = coherence_score(prompt_text, description_text)
+            text_hall_risk, hallucinated = detect_hallucination(prompt_text, description_text)
+
+        prompt_match_score = _clamp(
+            (0.75 * pixel_eval["pixel_match"]) +
+            ((0.25 * text_similarity) if has_description else 0.0)
         )
-        
+
+        keyword_overlap = _clamp(
+            (0.7 * pixel_eval["keyword_coverage"]) +
+            ((0.3 * text_rouge) if has_description else 0.0)
+        )
+
+        relevance = _clamp(
+            0.6 * prompt_match_score +
+            0.15 * pixel_eval["keyword_coverage"] +
+            ((0.25 * text_relevance) if has_description else 0.0)
+        )
+
+        visual_coherence = _clamp(
+            (0.7 * pixel_eval["detail_score"]) +
+            (0.3 * (1.0 - abs(0.5 - pixel_features.get("brightness", 0.5))))
+        )
+        coherence = _clamp((0.4 * text_coherence if has_description else 0.0) + (0.6 * visual_coherence))
+
+        hall_risk = _clamp((0.6 * (1.0 - pixel_eval["pixel_match"])) + (0.4 * text_hall_risk))
+
+        toxicity_input = description_text if has_description else prompt_text
+        toxicity = toxicity_penalty(toxicity_input)
+        safety_score = _clamp(1.0 - toxicity)
+
+        accuracy_score = _clamp(
+            0.32 * prompt_match_score +
+            0.20 * keyword_overlap +
+            0.16 * relevance +
+            0.12 * coherence +
+            0.12 * (1.0 - hall_risk) +
+            0.08 * safety_score
+        )
+
         eval_results = {
             "Prompt-Image Match Score": round(prompt_match_score, 3),
-            "Keyword Overlap (ROUGE-1)": round(rouge, 3),
+            "Keyword Overlap (ROUGE-1)": round(keyword_overlap, 3),
             "Relevance to Prompt": round(relevance, 3),
             "Description Coherence": round(coherence, 3),
             "Hallucination Risk": round(hall_risk, 3),
             "Overall Accuracy": round(accuracy_score, 3),
-            "Safety Score": round(1 - toxicity, 3)
+            "Safety Score": round(safety_score, 3)
         }
-        
-        explanation = f"🎨 AI Image Generation Evaluation\n\n"
-        explanation += f"📊 Accuracy Analysis:\n"
-        explanation += f"✅ Overall Accuracy: {round(accuracy_score * 100, 1)}%\n\n"
-        explanation += f"🎯 Prompt Match: {round(prompt_match_score * 100, 1)}% "
-        explanation += f"({'Excellent' if prompt_match_score > 0.8 else 'Good' if prompt_match_score > 0.6 else 'Fair' if prompt_match_score > 0.4 else 'Poor'})\n"
-        explanation += f"🔤 Keyword Coverage: {round(rouge * 100, 1)}%\n"
+
+        explanation = "🎨 AI Image Generation Evaluation\n\n"
+        explanation += "🧠 Method: Pixel-first automatic analysis"
+        explanation += " (dominant color, brightness, contrast, detail, and prompt cues)"
+        explanation += " with optional text-description refinement.\n\n"
+
+        explanation += "📊 Accuracy Analysis:\n"
+        explanation += f"✅ Overall Accuracy: {round(accuracy_score * 100, 1)}%\n"
+        explanation += f"🎯 Prompt Match: {round(prompt_match_score * 100, 1)}%\n"
+        explanation += f"🔤 Keyword Coverage: {round(keyword_overlap * 100, 1)}%\n"
         explanation += f"🎲 Relevance: {round(relevance * 100, 1)}%\n"
-        explanation += f"🧠 Coherence: {round(coherence * 100, 1)}%\n\n"
-        
+        explanation += f"🧠 Coherence: {round(coherence * 100, 1)}%\n"
+        explanation += f"🛡️ Safety Score: {round(safety_score * 100, 1)}%\n"
+        explanation += f"🖼️ Pixel Tags: {', '.join(pixel_eval['auto_tags'])}\n\n"
+
+        if not has_description:
+            explanation += "ℹ️ No manual description provided. Scores were computed directly from image pixels + prompt text.\n\n"
+
         if hall_risk > 0.5:
-            explanation += f"⚠️ High Hallucination Risk: The AI may have added elements not in your prompt\n"
+            explanation += "⚠️ High hallucination risk: generated image likely diverges from requested intent.\n"
             if hallucinated:
-                explanation += f"   Found {len(hallucinated)} potential hallucinated elements\n"
+                explanation += f"   Found {len(hallucinated)} potential unsupported entities in description.\n"
         elif hall_risk > 0.3:
-            explanation += f"⚡ Moderate Hallucination: Some creative interpretation detected\n"
+            explanation += "⚡ Moderate hallucination risk: partial creative deviation detected.\n"
         else:
-            explanation += f"✅ Low Hallucination: Image closely follows prompt\n"
-        
-        explanation += f"\n🛡️ Safety: {'✅ Safe' if toxicity < 0.3 else '⚠️ Contains concerning content'}\n"
+            explanation += "✅ Low hallucination risk: image closely follows prompt intent.\n"
+
         explanation += f"\n📐 Image Properties: {image_props.get('Size (pixels)', 'N/A')} | {image_props.get('Mode', 'N/A')}\n"
-        
-        # Provide actionable feedback
-        explanation += f"\n💡 Recommendations:\n"
+        explanation += "\n💡 Recommendations:\n"
         if accuracy_score > 0.8:
             explanation += "- Excellent match! The AI accurately interpreted your prompt.\n"
         elif accuracy_score > 0.6:
@@ -535,12 +986,12 @@ def multimodal_evaluate(image_data, prompt_text, description_text=None):
             explanation += "- Moderate match. Consider refining your prompt for better results.\n"
         else:
             explanation += "- Low match. The AI may have misunderstood the prompt. Try being more specific.\n"
-        
+
         if hall_risk > 0.4:
             explanation += "- The AI added unexpected elements. Specify what NOT to include in prompts.\n"
-        
+
         return eval_results, image_props, eval_results, explanation
-    
+
     except Exception as e:
         return None, {}, {}, f"❌ Error analyzing multimodal content: {str(e)}"
 

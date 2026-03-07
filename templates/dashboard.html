@@ -230,7 +230,10 @@
                 <div class="input-group">
                     <label>Code to Analyze</label>
                     <div class="code-editor-container">
-                        <textarea id="code-input" placeholder="Paste the code here..." rows="10" class="code-editor"></textarea>
+                        <div class="code-editor-with-lines">
+                            <pre id="code-input-lines" class="line-numbers">1</pre>
+                            <textarea id="code-input" placeholder="Paste the code here..." rows="10" class="code-editor code-input-editor" oninput="syncCodeInputLineNumbers()" onscroll="syncCodeInputLineNumbers()"></textarea>
+                        </div>
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="analyzeCode()">
@@ -255,7 +258,11 @@
                 <p class="tab-desc">Evaluate how accurately AI generated an image from your prompt (Stable Diffusion, DALL-E, Midjourney, etc.)</p>
                 <div class="input-group">
                     <label>📸 Upload AI-Generated Image</label>
-                    <input type="file" id="mm-image" accept="image/*" onchange="previewImage()" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 2px solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem;">
+                    <div class="themed-file-upload">
+                        <input type="file" id="mm-image" accept="image/*" onchange="previewImage()">
+                        <label for="mm-image" class="file-upload-btn"><i class="fa-solid fa-image"></i> Choose Image</label>
+                        <span id="mm-file-name" class="file-upload-name">No file chosen</span>
+                    </div>
                     <img id="image-preview" style="display:none; max-width:100%; margin-top:1rem; border-radius:1rem; border: 2px solid var(--main-color);">
                 </div>
                 <div class="input-group">
@@ -349,6 +356,15 @@
             const data = await res.json();
 
             if (res.ok) {
+                const hallucinatedEntities = (data.hallucinated_entities || []).map(entity => {
+                    if (typeof entity === 'object' && entity !== null) {
+                        const entityText = entity.text || 'Unknown';
+                        const entityType = entity.type || 'UNKNOWN';
+                        return `${entityText} (${entityType})`;
+                    }
+                    return String(entity);
+                });
+
                 resultsDiv.innerHTML = `
                     <div class="result-card">
                         <h4>Hallucination Risk Score</h4>
@@ -356,7 +372,7 @@
                             ${(data.hallucination_risk * 100).toFixed(1)}%
                         </div>
                         <h4 style="margin-top: 2rem;">Hallucinated Entities</h4>
-                        <p>${data.hallucinated_entities.length > 0 ? data.hallucinated_entities.join(', ') : 'None detected'}</p>
+                        <p>${hallucinatedEntities.length > 0 ? hallucinatedEntities.join('<br>') : 'None detected'}</p>
                         <p style="margin-top: 1.5rem; color: #999; font-size: 0.9rem;">${data.explanation}</p>
                     </div>
                 `;
@@ -388,6 +404,9 @@
             const data = await res.json();
 
             if (res.ok) {
+                const entityAnalysis = data.entity_analysis || {};
+                const namedEntities = data.named_entities || [];
+
                 resultsDiv.innerHTML = `
                     <div class="result-card">
                         <h4>Bias Score</h4>
@@ -396,10 +415,11 @@
                         </div>
                         <h4 style="margin-top: 2rem;">Entity Analysis</h4>
                         <ul>
-                            ${Object.entries(data.entity_analysis).map(([k, v]) => 
-                                `<li><strong>${k}:</strong> ${v} mentions</li>`
+                            ${Object.entries(entityAnalysis).map(([k, v]) => 
+                                `<li><strong>${k}:</strong> ${v}</li>`
                             ).join('')}
                         </ul>
+                        ${namedEntities.length > 0 ? `<p style="margin-top: 1.2rem; color: #aaa;">Named entities: ${namedEntities.map(item => Array.isArray(item) ? `${item[0]} (${item[1]})` : (typeof item === 'object' ? `${item.text || 'Unknown'} (${item.type || 'UNKNOWN'})` : String(item))).join(', ')}</p>` : ''}
                     </div>
                 `;
             } else {
@@ -483,77 +503,58 @@
 
                 const data = await response.json();
                 
+                const metrics = data.metrics || {};
+                const metricOrder = [
+                    ['Overall Accuracy', 'Overall Accuracy'],
+                    ['Prompt-Image Match Score', 'Prompt Match'],
+                    ['Keyword Overlap (ROUGE-1)', 'Keyword Coverage'],
+                    ['Relevance to Prompt', 'Relevance'],
+                    ['Description Coherence', 'Coherence'],
+                    ['Hallucination Risk', 'Hallucination Risk'],
+                    ['Safety Score', 'Safety Score']
+                ];
+
                 let html = '';
-                
-                // Accuracy Cards (Vertical with flex-wrap)
-                html += '<div class="results-grid multimodal-grid">';
-                
-                if (data.metrics) {
-                    const metrics = data.metrics;
-                    
-                    // Overall Accuracy (highlighted)
-                    if (metrics['Overall Accuracy'] !== undefined) {
-                        const accuracy = metrics['Overall Accuracy'];
-                        let accuracyColor = accuracy > 0.8 ? '#00ff88' : accuracy > 0.6 ? '#00bcd4' : accuracy > 0.4 ? '#ffaa00' : '#ff4444';
-                        html += `<div class="result-item highlight"><h4>Overall Accuracy</h4><div class="score" style="color: ${accuracyColor}; font-size: 2.5rem;">${(accuracy * 100).toFixed(1)}%</div></div>`;
+
+                // Row 1: Core Metrics in one flex row
+                html += '<div class="results-grid multimodal-metrics-row">';
+                metricOrder.forEach(([key, label]) => {
+                    const rawValue = metrics[key];
+                    const value = Number(rawValue ?? 0);
+
+                    let color = '#00f0ff';
+                    if (label === 'Overall Accuracy' || label === 'Prompt Match' || label === 'Keyword Coverage' || label === 'Relevance' || label === 'Coherence' || label === 'Safety Score') {
+                        color = value > 0.8 ? '#00ff88' : value > 0.6 ? '#00f0ff' : value > 0.4 ? '#ffaa00' : '#ff4444';
                     }
-                    
-                    // Prompt Match Score
-                    if (metrics['Prompt-Image Match Score'] !== undefined && metrics['Prompt-Image Match Score'] !== 'N/A') {
-                        html += `<div class="result-item"><h4>Prompt Match</h4><div class="score">${(metrics['Prompt-Image Match Score'] * 100).toFixed(1)}%</div></div>`;
+                    if (label === 'Hallucination Risk') {
+                        color = value < 0.3 ? '#00ff88' : value < 0.6 ? '#ffaa00' : '#ff4444';
                     }
-                    
-                    // ROUGE-1 Score
-                    if (metrics['Keyword Overlap (ROUGE-1)'] !== undefined) {
-                        html += `<div class="result-item"><h4>Keyword Coverage</h4><div class="score">${(metrics['Keyword Overlap (ROUGE-1)'] * 100).toFixed(1)}%</div></div>`;
-                    }
-                    
-                    // Relevance
-                    if (metrics['Relevance to Prompt'] !== undefined) {
-                        html += `<div class="result-item"><h4>Relevance</h4><div class="score">${(metrics['Relevance to Prompt'] * 100).toFixed(1)}%</div></div>`;
-                    }
-                    
-                    // Coherence
-                    if (metrics['Description Coherence'] !== undefined) {
-                        html += `<div class="result-item"><h4>Coherence</h4><div class="score">${(metrics['Description Coherence'] * 100).toFixed(1)}%</div></div>`;
-                    }
-                    
-                    // Hallucination Risk
-                    if (metrics['Hallucination Risk'] !== undefined) {
-                        const hallRisk = metrics['Hallucination Risk'];
-                        let hallColor = hallRisk < 0.3 ? '#00ff88' : hallRisk < 0.6 ? '#ffaa00' : '#ff4444';
-                        html += `<div class="result-item"><h4>Hallucination Risk</h4><div class="score" style="color: ${hallColor};">${(hallRisk * 100).toFixed(1)}%</div></div>`;
-                    }
-                    
-                    // Safety Score
-                    if (metrics['Safety Score'] !== undefined) {
-                        html += `<div class="result-item"><h4>Safety Score</h4><div class="score">${(metrics['Safety Score'] * 100).toFixed(1)}%</div></div>`;
-                    }
-                }
-                
-                html += '</div>';
-                
-                // Detailed Explanation
-                if (data.explanation) {
-                    html += '<div class="result-card" style="margin-top: 2rem;">';
-                    html += '<h4>📋 Detailed Analysis</h4>';
-                    html += `<pre style="white-space: pre-wrap; background: var(--bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.1rem;">${data.explanation}</pre>`;
+
+                    html += `<div class="result-item ${label === 'Overall Accuracy' ? 'highlight' : ''}">`;
+                    html += `<h4>${label}</h4>`;
+                    html += `<div class="score" style="color: ${color};">${(value * 100).toFixed(1)}%</div>`;
                     html += '</div>';
-                }
-                
-                // Image Properties
-                if (data.image_properties) {
-                    html += '<div class="result-card" style="margin-top: 2rem;">';
-                    html += '<h4>📐 Image Properties</h4>';
-                    html += '<div style="margin-top: 1rem;">';
-                    Object.entries(data.image_properties).forEach(([key, value]) => {
-                        if (key !== 'error') {
-                            html += `<p style="margin-bottom: 0.8rem;"><strong>${key}:</strong> ${value}</p>`;
-                        }
-                    });
-                    html += '</div></div>';
-                }
-                
+                });
+                html += '</div>';
+
+                // Row 2: Detailed Analysis
+                html += '<div class="result-card multimodal-detail-row">';
+                html += '<h4>📋 Detailed Analysis</h4>';
+                html += `<pre style="white-space: pre-wrap; background: var(--bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.1rem;">${escapeHtml(data.explanation || 'No detailed explanation available.')}</pre>`;
+                html += '</div>';
+
+                // Row 3: Image Properties
+                html += '<div class="result-card multimodal-props-row">';
+                html += '<h4>📐 Image Properties</h4>';
+                html += '<div style="margin-top: 1rem;">';
+                const imageProperties = data.image_properties || {};
+                Object.entries(imageProperties).forEach(([key, value]) => {
+                    if (key !== 'error') {
+                        html += `<p style="margin-bottom: 0.8rem;"><strong>${escapeHtml(String(key))}:</strong> ${escapeHtml(String(value))}</p>`;
+                    }
+                });
+                html += '</div></div>';
+
                 resultsDiv.innerHTML = html;
             };
             
@@ -566,7 +567,10 @@
 
     function previewImage() {
         const file = document.getElementById('mm-image').files[0];
+        const fileName = document.getElementById('mm-file-name');
+
         if (file) {
+            fileName.textContent = file.name;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const preview = document.getElementById('image-preview');
@@ -574,6 +578,8 @@
                 preview.style.display = 'block';
             };
             reader.readAsDataURL(file);
+        } else {
+            fileName.textContent = 'No file chosen';
         }
     }
 
@@ -812,6 +818,12 @@
                 html += '<div class="code-analysis-row">';
                 html += '<div class="result-card">';
                 html += '<h3>📚 Documentation</h3>';
+                if (data.readme_path) {
+                    html += `<p style="margin-top: 0.8rem; color: #00ff88;">README generated at: ${escapeHtml(data.readme_path)}</p>`;
+                }
+                if (data.primary_readme_created && data.primary_readme_path) {
+                    html += `<p style="margin-top: 0.5rem; color: #00f0ff;">Primary README created at: ${escapeHtml(data.primary_readme_path)}</p>`;
+                }
                 html += `<pre style="white-space: pre-wrap; background: var(--snd-bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.3rem; text-align: left;">${escapeHtml(data.documentation)}</pre>`;
                 html += '</div></div>';
             }
@@ -823,22 +835,30 @@
                 html += '<div class="result-card" style="border-color: #00bcd4;">';
                 html += '<h3>🤖 LLM Code Evaluation</h3>';
                 html += `<div style="font-size: 3rem; color: ${scoreColor}; margin: 1rem 0;">${eval.quality_score}/100</div>`;
-                html += `<p style="line-height: 1.8;">Matches prompt: <strong>${eval.matches_prompt ? 'Yes' : 'No'}</strong> (${eval.match_ratio})</p>`;
-                if (eval.analysis) html += `<p style="line-height: 1.8; margin-top: 1rem;">${eval.analysis}</p>`;
+                html += `<p style="line-height: 1.8;">Matches prompt: <strong>${eval.matches_prompt ? 'Yes' : 'No'}</strong> (${((eval.match_ratio || 0) * 100).toFixed(1)}%)</p>`;
+                if (Array.isArray(eval.issues) && eval.issues.length > 0) {
+                    html += '<h4 style="margin-top: 1.2rem; color: #ff8a8a;">Detected Issues</h4>';
+                    html += '<ul style="margin: 0.8rem 0 0 2rem;">';
+                    eval.issues.forEach(issue => {
+                        html += `<li style="margin-bottom: 0.6rem; color: #ffb3b3; font-size: 1.3rem;">${escapeHtml(issue)}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                if (eval.analysis) html += `<p style="line-height: 1.8; margin-top: 1rem;">${escapeHtml(eval.analysis)}</p>`;
                 html += '</div></div>';
             }
             
             // 1. Metrics Cards on Top (if available)
-            html += '<div class="results-grid code-analysis-row">';
-            if (data.metrics) {
-                html += `<div class="result-item"><h4>Total Lines</h4><div class="score">${data.metrics['Total Lines']}</div></div>`;
-                html += `<div class="result-item"><h4>Code Lines</h4><div class="score">${data.metrics['Code Lines']}</div></div>`;
-                html += `<div class="result-item"><h4>Functions</h4><div class="score">${data.metrics['Functions']}</div></div>`;
-                html += `<div class="result-item"><h4>Classes</h4><div class="score">${data.metrics['Classes']}</div></div>`;
-                html += `<div class="result-item"><h4>Comments</h4><div class="score">${data.metrics['Comment Lines']}</div></div>`;
-                html += `<div class="result-item"><h4>Imports</h4><div class="score">${data.metrics['Imports']}</div></div>`;
+            if (data.metrics && Object.keys(data.metrics).length > 0) {
+                html += '<div class="results-grid code-analysis-row">';
+                html += `<div class="result-item"><h4>Total Lines</h4><div class="score">${data.metrics['Total Lines'] ?? 0}</div></div>`;
+                html += `<div class="result-item"><h4>Code Lines</h4><div class="score">${data.metrics['Code Lines'] ?? 0}</div></div>`;
+                html += `<div class="result-item"><h4>Functions</h4><div class="score">${data.metrics['Functions'] ?? 0}</div></div>`;
+                html += `<div class="result-item"><h4>Classes</h4><div class="score">${data.metrics['Classes'] ?? 0}</div></div>`;
+                html += `<div class="result-item"><h4>Comments</h4><div class="score">${data.metrics['Comment Lines'] ?? 0}</div></div>`;
+                html += `<div class="result-item"><h4>Imports</h4><div class="score">${data.metrics['Imports'] ?? 0}</div></div>`;
+                html += '</div>';
             }
-            html += '</div>';
             
             // 2. Code Quality Score + Suggestions (full/basic only)
             if (analysisType === 'full' || analysisType === 'basic') {
@@ -923,22 +943,58 @@
                 html += '<h4>✨ Improved Code</h4>';
                 html += `<button class="copy-btn" onclick="copyImprovedCode()"><i class="fa-solid fa-copy"></i> Copy Code</button>`;
                 html += '</div>';
-                html += `<pre id="improved-code-output" class="code-editor" style="margin-top: 0; border-radius: 0 0 0.8rem 0.8rem; text-align: left;">${escapeHtml(improvedCode)}</pre>`;
+                html += '<div class="code-editor-with-lines code-output-with-lines">';
+                html += '<pre id="improved-code-lines" class="line-numbers">1</pre>';
+                html += `<pre id="improved-code-output" class="code-editor code-editor-output line-number-content" style="margin-top: 0; border-radius: 0 0 0.8rem 0.8rem; text-align: left;">${escapeHtml(improvedCode)}</pre>`;
+                html += '</div>';
                 html += '</div>';
             }
             
             html += '</div>';
             
             resultsDiv.innerHTML = html;
+            syncCodeInputLineNumbers();
+            syncImprovedCodeLineNumbers();
+
+            const improvedCodeOutput = document.getElementById('improved-code-output');
+            if (improvedCodeOutput) {
+                improvedCodeOutput.addEventListener('scroll', syncImprovedCodeLineNumbers);
+            }
 
         } catch (error) {
             resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
         }
     }
 
+    function buildLineNumberText(lineCount) {
+        const safeCount = Math.max(1, Number(lineCount) || 1);
+        return Array.from({ length: safeCount }, (_, i) => i + 1).join('\n');
+    }
+
+    function syncCodeInputLineNumbers() {
+        const editor = document.getElementById('code-input');
+        const gutter = document.getElementById('code-input-lines');
+        if (!editor || !gutter) return;
+
+        const lineCount = Math.max(1, editor.value.split('\n').length);
+        gutter.textContent = buildLineNumberText(lineCount);
+        gutter.scrollTop = editor.scrollTop;
+    }
+
+    function syncImprovedCodeLineNumbers() {
+        const editor = document.getElementById('improved-code-output');
+        const gutter = document.getElementById('improved-code-lines');
+        if (!editor || !gutter) return;
+
+        const lineCount = Math.max(1, editor.textContent.split('\n').length);
+        gutter.textContent = buildLineNumberText(lineCount);
+        gutter.scrollTop = editor.scrollTop;
+    }
+
     function escapeHtml(text) {
+        const safeText = text === undefined || text === null ? '' : String(text);
         const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
-        return text.replace(/[&<>"']/g, m => map[m]);
+        return safeText.replace(/[&<>"']/g, m => map[m]);
     }
 
     function copyImprovedCode() {
@@ -1007,5 +1063,7 @@
 
         return Math.max(0.1, Math.min(0.98, score));
     }
+
+    syncCodeInputLineNumbers();
 </script>
 {% endblock %}
