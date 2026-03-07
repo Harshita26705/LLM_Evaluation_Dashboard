@@ -644,6 +644,11 @@ def dashboard():
     """Main evaluation dashboard"""
     return render_template('dashboard.html')
 
+@app.route('/learn-more')
+def learn_more():
+    """Learn More page with comprehensive guide"""
+    return render_template('learn-more.html')
+
 @app.route('/api/evaluate', methods=['POST'])
 def api_evaluate():
     """API endpoint for single response evaluation"""

@@ -65,6 +65,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabBtns = document.querySelectorAll(".tab-btn");
     const tabContents = document.querySelectorAll(".tab-content");
 
+    // Handle URL parameters for dashboard tab navigation
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam && document.getElementById(tabParam)) {
+        // Switch to the tab specified in URL
+        setTimeout(() => {
+            const targetBtn = document.querySelector(`[data-tab="${tabParam}"]`);
+            if (targetBtn) {
+                // Hide all tabs
+                tabContents.forEach((tab) => tab.classList.remove("active"));
+                // Remove active class from all buttons
+                tabBtns.forEach((b) => b.classList.remove("active"));
+                // Show selected tab
+                document.getElementById(tabParam)?.classList.add("active");
+                targetBtn.classList.add("active");
+                
+                // Scroll to dashboard section
+                document.querySelector('.dashboard-container')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
     tabBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
             const tabId = btn.dataset.tab;
@@ -78,6 +101,9 @@ document.addEventListener("DOMContentLoaded", () => {
             // Show selected tab
             document.getElementById(tabId)?.classList.add("active");
             btn.classList.add("active");
+            
+            // Update URL without page reload
+            window.history.pushState({ tab: tabId }, '', `/dashboard?tab=${tabId}`);
         });
     });
 });

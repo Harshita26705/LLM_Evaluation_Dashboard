@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Learn More - LLM Evaluation Dashboard{% endblock %}
+
+{% block content %}
+<section class="learn-more-hero">
+    <div class="learn-more-header">
+        <h1>Learn More About LLM Evaluator</h1>
+        <p>Comprehensive guide to understanding and using our advanced evaluation platform</p>
+    </div>
+</section>
+
+<section class="learn-more-content">
+    <div class="learn-more-container">
+        <!-- About Section -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-circle-info"></i> What is LLM Evaluator?</h2>
+            <p>LLM Evaluation Dashboard is an enterprise-grade platform designed to assess Large Language Model responses across multiple critical dimensions. Whether you're developing AI systems, fine-tuning models, or conducting research, our comprehensive evaluation metrics provide deep insights into response quality, safety, fairness, and factuality.</p>
+            
+            <p>Built with state-of-the-art NLP techniques and intuitive interfaces, we make advanced evaluation accessible to everyone—from semantic similarity using transformer embeddings to toxicity detection powered by deep learning.</p>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-rocket"></i> Getting Started</h2>
+            <ol class="learn-list">
+                <li><strong>Navigate to Dashboard:</strong> Click the "Dashboard" button in the navigation bar to access the evaluation tools.</li>
+                <li><strong>Choose Your Evaluation Type:</strong> Select from 7 different evaluation tabs based on what you want to analyze.</li>
+                <li><strong>Input Your Data:</strong> Paste your reference text, model response, code, or image into the input boxes.</li>
+                <li><strong>Click Analyze:</strong> Click the analysis button to get comprehensive evaluation results.</li>
+                <li><strong>Review Results:</strong> Examine detailed metrics, scores, and insights about your content.</li>
+            </ol>
+        </div>
+
+        <!-- Features Overview -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-sparkles"></i> Key Features</h2>
+            
+            <div class="features-list">
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-puzzle-piece"></i> Semantic Analysis</h3>
+                    <p>Measures semantic similarity between reference and response text using advanced transformer embeddings. Perfect for evaluating how well a model understood and addressed the query.</p>
+                </div>
+
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-shield-virus"></i> Safety Detection</h3>
+                    <p>Automatically detects toxic, harmful, and inappropriate content in LLM responses. Ensures your AI outputs are safe and respectful for public use.</p>
+                </div>
+
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-scale-balanced"></i> Bias Analysis</h3>
+                    <p>Identifies gender bias, demographic biases, and fairness issues in generated text. Critical for ensuring equitable AI systems.</p>
+                </div>
+
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Hallucination Detection</h3>
+                    <p>Detects unsupported claims and factually incorrect information in responses. Helps maintain factual accuracy and reliability.</p>
+                </div>
+
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-code"></i> Code Quality Analysis</h3>
+                    <p>Analyzes Python code for syntax errors, structural issues, and quality improvements. Includes automatic code repair and enhancement suggestions.</p>
+                </div>
+
+                <div class="feature-detail">
+                    <h3><i class="fa-solid fa-images"></i> Multimodal Support</h3>
+                    <p>Evaluate image descriptions, captions, and multimodal AI models. Analyze how well images are described or classified by your models.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Metrics -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-chart-line"></i> Understanding the Metrics</h2>
+            
+            <table class="metrics-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Description</th>
+                        <th>Range</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Semantic Similarity</strong></td>
+                        <td>How similar the response is to the reference text in meaning</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ROUGE-1 F1</strong></td>
+                        <td>Lexical overlap score between texts</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Coherence</strong></td>
+                        <td>Logical flow and structure of the response</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Toxicity Penalty</strong></td>
+                        <td>Level of toxic or harmful content (lower is better)</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bias Penalty</strong></td>
+                        <td>Level of demographic or gender bias (lower is better)</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hallucination Risk</strong></td>
+                        <td>Risk of unsupported claims or false information (lower is better)</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Final Score</strong></td>
+                        <td>Composite score combining all metrics (higher is better)</td>
+                        <td>0.0 - 1.0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Use Cases -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-lightbulb"></i> Use Cases</h2>
+            
+            <ul class="use-cases-list">
+                <li><strong>Model Development & Fine-tuning:</strong> Evaluate and compare LLM outputs during training to identify quality improvements</li>
+                <li><strong>Quality Assurance:</strong> Automatically test AI system outputs for safety, bias, and factuality before deployment</li>
+                <li><strong>Research & Benchmarking:</strong> Compare multiple models on standardized evaluation metrics</li>
+                <li><strong>Content Moderation:</strong> Detect toxic or harmful content in AI-generated text at scale</li>
+                <li><strong>Code Review:</strong> Analyze code snippets for quality, security, and structural issues</li>
+                <li><strong>Fairness & Ethics:</strong> Monitor AI systems for bias and ensure responsible AI deployment</li>
+            </ul>
+        </div>
+
+        <!-- Tips & Best Practices -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-star"></i> Tips & Best Practices</h2>
+            
+            <ul class="tips-list">
+                <li><strong>Detailed Prompts:</strong> More detailed reference texts lead to more accurate evaluations</li>
+                <li><strong>Batch Evaluation:</strong> Use the Multi-Model tab to compare multiple models at once</li>
+                <li><strong>Code Context:</strong> Provide complete, executable code snippets for better code analysis</li>
+                <li><strong>Image Quality:</strong> Clear, well-lit images provide better multimodal analysis results</li>
+                <li><strong>Regular Testing:</strong> Continuously evaluate your models to track quality improvements over time</li>
+                <li><strong>Combine Metrics:</strong> Use multiple evaluation dimensions together for comprehensive assessment</li>
+            </ul>
+        </div>
+
+        <!-- FAQ -->
+        <div class="learn-section">
+            <h2><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h2>
+            
+            <div class="faq-container">
+                <div class="faq-item">
+                    <h4>How accurate are the evaluations?</h4>
+                    <p>Our evaluations use state-of-the-art NLP models and machine learning techniques. While not perfect, they provide reliable insights into response quality, safety, and fairness. Always combine automated evaluation with human review for critical decisions.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Can I use this for production systems?</h4>
+                    <p>Yes! This is an enterprise-grade platform designed for production use. It can be integrated into your AI pipelines for continuous quality monitoring and evaluation.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>What LLMs are supported?</h4>
+                    <p>Our platform is model-agnostic and works with any LLM—GPT-4, GPT-3.5, Claude, LLaMA, Mistral, or any other text-generating model.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Is my data private?</h4>
+                    <p>This is a local, open-source tool. Your data is processed on your machine and not sent to external servers. You have complete control over your data privacy.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>How can I provide feedback or report issues?</h4>
+                    <p>Visit our <a href="https://github.com/Harshita26705/LLM_Evaluation_Dashboard">GitHub repository</a> to report issues, suggest features, or contribute to the project.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="learn-section cta-section">
+            <h2>Ready to Get Started?</h2>
+            <p>Explore the full power of LLM Evaluator and start analyzing your models today.</p>
+            <a href="/dashboard" class="btn btn-primary btn-large">Go to Dashboard</a>
+        </div>
+    </div>
+</section>
+
+<style>
+.learn-more-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    padding: 4rem 2rem;
+    text-align: center;
+    color: white;
+}
+
+.learn-more-header h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.learn-more-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.learn-more-content {
+    background: var(--bg-color);
+    padding: 3rem 0;
+}
+
+.learn-more-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.learn-section {
+    margin-bottom: 3rem;
+}
+
+.learn-section h2 {
+    color: var(--cyan);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.learn-section h2 i {
+    color: var(--cyan);
+}
+
+.learn-section p {
+    color: var(--text-color);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.learn-list {
+    list-style: decimal;
+    margin-left: 2rem;
+    color: var(--text-color);
+}
+
+.learn-list li {
+    margin-bottom: 1rem;
+    line-height: 1.8;
+}
+
+.features-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-detail {
+    background: rgba(0, 240, 255, 0.05);
+    border-left: 3px solid var(--cyan);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.feature-detail h3 {
+    color: var(--cyan);
+    margin-bottom: 0.8rem;
+    font-size: 1.2rem;
+}
+
+.feature-detail p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    background: rgba(0, 240, 255, 0.03);
+    border: 1px solid rgba(0, 240, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.metrics-table thead {
+    background: rgba(0, 240, 255, 0.1);
+}
+
+.metrics-table th {
+    padding: 1rem;
+    text-align: left;
+    color: var(--cyan);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.metrics-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    color: var(--text-color);
+}
+
+.metrics-table tr:hover {
+    background: rgba(0, 240, 255, 0.05);
+}
+
+.use-cases-list {
+    list-style: none;
+    padding: 0;
+    color: var(--text-color);
+}
+
+.use-cases-list li {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--cyan);
+    padding-left: 1.5rem;
+    background: rgba(0, 240, 255, 0.02);
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    color: var(--text-color);
+}
+
+.tips-list li {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--cyan);
+    padding-left: 1.5rem;
+    background: rgba(0, 240, 255, 0.02);
+}
+
+.faq-container {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.faq-item {
+    background: rgba(0, 240, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--cyan);
+}
+
+.faq-item h4 {
+    color: var(--cyan);
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.faq-item p {
+    color: var(--text-color);
+    margin-bottom: 0;
+}
+
+.faq-item a {
+    color: var(--cyan);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.faq-item a:hover {
+    text-decoration: underline;
+}
+
+.cta-section {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
+    border-radius: 8px;
+    margin-top: 3rem;
+}
+
+.cta-section h2 {
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .learn-more-header h1 {
+        font-size: 2rem;
+    }
+
+    .learn-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .features-list {
+        grid-template-columns: 1fr;
+    }
+
+    .metrics-table {
+        font-size: 0.9rem;
+    }
+
+    .metrics-table th, .metrics-table td {
+        padding: 0.7rem;
+    }
+}
+</style>
+{% endblock %}
