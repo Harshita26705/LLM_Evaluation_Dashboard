@@ -17,6 +17,7 @@ pillow==10.0.0
 # Deep Learning
 torch==2.1.0
 transformers==4.30.0
+huggingface-hub==0.14.1
 
 # Utilities
 python-dotenv==1.0.0

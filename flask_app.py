@@ -24,7 +24,14 @@ except LookupError:
     nltk.download('punkt', quiet=True)
 
 from nltk.tokenize import TreebankWordTokenizer
-from sentence_transformers import SentenceTransformer, util
+try:
+    from sentence_transformers import SentenceTransformer, util
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except Exception as e:
+    SentenceTransformer = None
+    util = None
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    print(f"   ⚠️ SentenceTransformer import unavailable: {e}")
 from detoxify import Detoxify
 import base64
 
@@ -62,11 +69,15 @@ def ensure_models_loaded():
     if models_loaded:
         return
     print("⏳ Loading models...")
-    try:
-        embedder = SentenceTransformer("all-MiniLM-L6-v2")
-        print("   ✅ Loaded sentence embedder")
-    except Exception as e:
-        print(f"   ⚠️ Could not load embedder: {e}")
+    if SENTENCE_TRANSFORMERS_AVAILABLE:
+        try:
+            embedder = SentenceTransformer("all-MiniLM-L6-v2")
+            print("   ✅ Loaded sentence embedder")
+        except Exception as e:
+            print(f"   ⚠️ Could not load embedder: {e}")
+            embedder = None
+    else:
+        print("   ⚠️ Sentence embedder disabled; using lexical fallback for semantic similarity")
         embedder = None
 
     try:
