@@ -3,410 +3,583 @@
 {% block title %}Learn More - LLM Evaluation Dashboard{% endblock %}
 
 {% block content %}
-<section class="learn-more-hero">
-    <div class="learn-more-header">
-        <h1>Learn More About LLM Evaluator</h1>
-        <p>Comprehensive guide to understanding and using our advanced evaluation platform</p>
+<!-- Hero Section -->
+<div class="learn-hero">
+    <div class="hero-content">
+        <h1>Welcome to <span class="gradient-text">LLM Evaluator</span></h1>
+        <p>Your Complete AI Response Evaluation Toolkit</p>
+        <div class="hero-buttons">
+            <a href="/dashboard" class="btn btn-primary">Try It Now</a>
+            <a href="https://github.com/Harshita26705/LLM_Evaluation_Dashboard" target="_blank" class="btn btn-secondary">View on GitHub</a>
+        </div>
+    </div>
+</div>
+
+<!-- What is LLM Evaluator Section -->
+<section class="learn-section">
+    <div class="section-header">
+        <h2>What is <span>LLM Evaluator?</span></h2>
+        <p>An open-source platform for comprehensive LLM evaluation and analysis</p>
+    </div>
+
+    <p style="color: #cbd5e1; font-size: 1.1rem; line-height: 1.8; text-align: center; max-width: 900px; margin: 0 auto 3rem;">
+        LLM Evaluator is a powerful, easy-to-use platform designed to comprehensively evaluate Large Language Model responses. Whether you're a researcher fine-tuning models, a developer building AI applications, or an enthusiast exploring language models, our suite of evaluation tools provides deep insights into response quality, safety, fairness, and factuality.
+    </p>
+
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-lightning"></i> Lightning Fast</h4>
+            <p>Real-time analysis with instant results. Evaluate your LLM responses in seconds.</p>
+        </div>
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-lock"></i> Fully Open Source</h4>
+            <p>100% open source, community-driven. Run locally with complete control over your data.</p>
+        </div>
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-chart-line"></i> Comprehensive Metrics</h4>
+            <p>9+ evaluation dimensions covering quality, safety, bias, hallucinations, and more.</p>
+        </div>
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-flask"></i> Production Ready</h4>
+            <p>Enterprise-grade infrastructure designed for scalable, reliable AI evaluation.</p>
+        </div>
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-code"></i> Easy Integration</h4>
+            <p>REST APIs and Python SDK for seamless integration into your workflows.</p>
+        </div>
+        <div class="feature-item">
+            <h4><i class="fa-solid fa-user-friends"></i> Community Driven</h4>
+            <p>Active community contributing features, improvements, and best practices.</p>
+        </div>
     </div>
 </section>
 
-<section class="learn-more-content">
-    <div class="learn-more-container">
-        <!-- About Section -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-circle-info"></i> What is LLM Evaluator?</h2>
-            <p>LLM Evaluation Dashboard is an enterprise-grade platform designed to assess Large Language Model responses across multiple critical dimensions. Whether you're developing AI systems, fine-tuning models, or conducting research, our comprehensive evaluation metrics provide deep insights into response quality, safety, fairness, and factuality.</p>
-            
-            <p>Built with state-of-the-art NLP techniques and intuitive interfaces, we make advanced evaluation accessible to everyone—from semantic similarity using transformer embeddings to toxicity detection powered by deep learning.</p>
+<!-- Core Features Section -->
+<section class="learn-section">
+    <div class="section-header">
+        <h2>Core <span>Features</span></h2>
+        <p>Everything you need for LLM evaluation</p>
+    </div>
+
+    <div class="grid-3">
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-puzzle-piece"></i></div>
+            <h3>Semantic Analysis</h3>
+            <p>Compare responses with reference text using advanced transformer embeddings. Understand how well your LLM grasped the prompt.</p>
         </div>
-
-        <!-- Getting Started -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-rocket"></i> Getting Started</h2>
-            <ol class="learn-list">
-                <li><strong>Navigate to Dashboard:</strong> Click the "Dashboard" button in the navigation bar to access the evaluation tools.</li>
-                <li><strong>Choose Your Evaluation Type:</strong> Select from 7 different evaluation tabs based on what you want to analyze.</li>
-                <li><strong>Input Your Data:</strong> Paste your reference text, model response, code, or image into the input boxes.</li>
-                <li><strong>Click Analyze:</strong> Click the analysis button to get comprehensive evaluation results.</li>
-                <li><strong>Review Results:</strong> Examine detailed metrics, scores, and insights about your content.</li>
-            </ol>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-shield-virus"></i></div>
+            <h3>Safety Detection</h3>
+            <p>Automatically detect toxic, harmful, or inappropriate content. Keep your AI outputs safe and respectful for public use.</p>
         </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <h3>Bias Analysis</h3>
+            <p>Identify gender, demographic, and fairness issues. Ensure your AI systems treat all users equitably.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>Hallucination Detection</h3>
+            <p>Catch false claims and unsupported information. Verify factual accuracy before deployment.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-code"></i></div>
+            <h3>Code Quality Analysis</h3>
+            <p>Analyze Python code for syntax errors, quality issues, and automatic improvements. Bug detection included.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-images"></i></div>
+            <h3>Multimodal Support</h3>
+            <p>Evaluate image descriptions, captions, and vision-language models. Support for multiple modalities.</p>
+        </div>
+    </div>
+</section>
 
-        <!-- Features Overview -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-sparkles"></i> Key Features</h2>
-            
-            <div class="features-list">
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-puzzle-piece"></i> Semantic Analysis</h3>
-                    <p>Measures semantic similarity between reference and response text using advanced transformer embeddings. Perfect for evaluating how well a model understood and addressed the query.</p>
-                </div>
+<!-- How to Run Section -->
+<section class="learn-section">
+    <div class="section-header">
+        <h2>How to <span>Get Started</span></h2>
+        <p>Get LLM Evaluator running in minutes</p>
+    </div>
 
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-shield-virus"></i> Safety Detection</h3>
-                    <p>Automatically detects toxic, harmful, and inappropriate content in LLM responses. Ensures your AI outputs are safe and respectful for public use.</p>
-                </div>
+    <div class="highlight-box">
+        <h3><i class="fa-solid fa-info-circle"></i> Prerequisites</h3>
+        <p>You'll need Python 3.8+ and pip installed on your system. All dependencies are automatically installed during setup.</p>
+    </div>
 
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-scale-balanced"></i> Bias Analysis</h3>
-                    <p>Identifies gender bias, demographic biases, and fairness issues in generated text. Critical for ensuring equitable AI systems.</p>
-                </div>
-
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Hallucination Detection</h3>
-                    <p>Detects unsupported claims and factually incorrect information in responses. Helps maintain factual accuracy and reliability.</p>
-                </div>
-
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-code"></i> Code Quality Analysis</h3>
-                    <p>Analyzes Python code for syntax errors, structural issues, and quality improvements. Includes automatic code repair and enhancement suggestions.</p>
-                </div>
-
-                <div class="feature-detail">
-                    <h3><i class="fa-solid fa-images"></i> Multimodal Support</h3>
-                    <p>Evaluate image descriptions, captions, and multimodal AI models. Analyze how well images are described or classified by your models.</p>
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Clone the Repository</h4>
+                <p>Download LLM Evaluator from GitHub and navigate to the project directory.</p>
+                <div class="code-block">
+                    <code>git clone https://github.com/Harshita26705/LLM_Evaluation_Dashboard.git<br>cd LLM_Evaluation_Dashboard</code>
                 </div>
             </div>
         </div>
 
-        <!-- Evaluation Metrics -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-chart-line"></i> Understanding the Metrics</h2>
-            
-            <table class="metrics-table">
-                <thead>
-                    <tr>
-                        <th>Metric</th>
-                        <th>Description</th>
-                        <th>Range</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Semantic Similarity</strong></td>
-                        <td>How similar the response is to the reference text in meaning</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>ROUGE-1 F1</strong></td>
-                        <td>Lexical overlap score between texts</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Coherence</strong></td>
-                        <td>Logical flow and structure of the response</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Toxicity Penalty</strong></td>
-                        <td>Level of toxic or harmful content (lower is better)</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Bias Penalty</strong></td>
-                        <td>Level of demographic or gender bias (lower is better)</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Hallucination Risk</strong></td>
-                        <td>Risk of unsupported claims or false information (lower is better)</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Final Score</strong></td>
-                        <td>Composite score combining all metrics (higher is better)</td>
-                        <td>0.0 - 1.0</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Use Cases -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-lightbulb"></i> Use Cases</h2>
-            
-            <ul class="use-cases-list">
-                <li><strong>Model Development & Fine-tuning:</strong> Evaluate and compare LLM outputs during training to identify quality improvements</li>
-                <li><strong>Quality Assurance:</strong> Automatically test AI system outputs for safety, bias, and factuality before deployment</li>
-                <li><strong>Research & Benchmarking:</strong> Compare multiple models on standardized evaluation metrics</li>
-                <li><strong>Content Moderation:</strong> Detect toxic or harmful content in AI-generated text at scale</li>
-                <li><strong>Code Review:</strong> Analyze code snippets for quality, security, and structural issues</li>
-                <li><strong>Fairness & Ethics:</strong> Monitor AI systems for bias and ensure responsible AI deployment</li>
-            </ul>
-        </div>
-
-        <!-- Tips & Best Practices -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-star"></i> Tips & Best Practices</h2>
-            
-            <ul class="tips-list">
-                <li><strong>Detailed Prompts:</strong> More detailed reference texts lead to more accurate evaluations</li>
-                <li><strong>Batch Evaluation:</strong> Use the Multi-Model tab to compare multiple models at once</li>
-                <li><strong>Code Context:</strong> Provide complete, executable code snippets for better code analysis</li>
-                <li><strong>Image Quality:</strong> Clear, well-lit images provide better multimodal analysis results</li>
-                <li><strong>Regular Testing:</strong> Continuously evaluate your models to track quality improvements over time</li>
-                <li><strong>Combine Metrics:</strong> Use multiple evaluation dimensions together for comprehensive assessment</li>
-            </ul>
-        </div>
-
-        <!-- FAQ -->
-        <div class="learn-section">
-            <h2><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h2>
-            
-            <div class="faq-container">
-                <div class="faq-item">
-                    <h4>How accurate are the evaluations?</h4>
-                    <p>Our evaluations use state-of-the-art NLP models and machine learning techniques. While not perfect, they provide reliable insights into response quality, safety, and fairness. Always combine automated evaluation with human review for critical decisions.</p>
-                </div>
-
-                <div class="faq-item">
-                    <h4>Can I use this for production systems?</h4>
-                    <p>Yes! This is an enterprise-grade platform designed for production use. It can be integrated into your AI pipelines for continuous quality monitoring and evaluation.</p>
-                </div>
-
-                <div class="faq-item">
-                    <h4>What LLMs are supported?</h4>
-                    <p>Our platform is model-agnostic and works with any LLM—GPT-4, GPT-3.5, Claude, LLaMA, Mistral, or any other text-generating model.</p>
-                </div>
-
-                <div class="faq-item">
-                    <h4>Is my data private?</h4>
-                    <p>This is a local, open-source tool. Your data is processed on your machine and not sent to external servers. You have complete control over your data privacy.</p>
-                </div>
-
-                <div class="faq-item">
-                    <h4>How can I provide feedback or report issues?</h4>
-                    <p>Visit our <a href="https://github.com/Harshita26705/LLM_Evaluation_Dashboard">GitHub repository</a> to report issues, suggest features, or contribute to the project.</p>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Install Dependencies</h4>
+                <p>Install all required Python packages using pip.</p>
+                <div class="code-block">
+                    <code>pip install -r requirements_flask.txt</code>
                 </div>
             </div>
         </div>
 
-        <!-- CTA -->
-        <div class="learn-section cta-section">
-            <h2>Ready to Get Started?</h2>
-            <p>Explore the full power of LLM Evaluator and start analyzing your models today.</p>
-            <a href="/dashboard" class="btn btn-primary btn-large">Go to Dashboard</a>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Start the Server</h4>
+                <p>Run the Flask application on your local machine.</p>
+                <div class="code-block">
+                    <code>python flask_app.py</code>
+                </div>
+            </div>
         </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Access the Dashboard</h4>
+                <p>Open your browser and navigate to the application URL. Start evaluating!</p>
+                <div class="code-block">
+                    <code>http://localhost:5000</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Section -->
+<section class="learn-section">
+    <div class="section-header">
+        <h2>Built With <span>Modern Tech</span></h2>
+        <p>Industry-standard tools and frameworks</p>
+    </div>
+
+    <div class="grid-3">
+        <div class="card">
+            <div class="card-icon"><i class="fa-brands fa-python"></i></div>
+            <h3>Python</h3>
+            <p>Fast, reliable backend with Flask for REST APIs and efficient processing.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+            <h3>NLP Models</h3>
+            <p>State-of-the-art transformers, spaCy, and NLTK for sophisticated language understanding.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-brands fa-js"></i></div>
+            <h3>Vanilla JS</h3>
+            <p>Lightweight frontend with no heavy dependencies. Fast, responsive, and accessible.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Use Cases Section -->
+<section class="learn-section">
+    <div class="section-header">
+        <h2>Perfect <span>For</span></h2>
+        <p>A wide range of AI evaluation scenarios</p>
+    </div>
+
+    <div class="grid-3">
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-microscope"></i></div>
+            <h3>Research</h3>
+            <p>Academic research and model benchmarking. Compare multiple LLMs on standardized metrics.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-gears"></i></div>
+            <h3>Development</h3>
+            <p>Fine-tune and improve your LLMs. Track quality improvements over iterations.</p>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Compliance</h3>
+            <p>Quality assurance and safety checks. Ensure responsible AI deployment with confidence.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-final">
+    <h2>Ready to Evaluate Your LLMs?</h2>
+    <p>Start analyzing your models with our comprehensive evaluation suite</p>
+    <div class="cta-buttons">
+        <a href="/dashboard" class="btn btn-primary">Open Dashboard</a>
+        <a href="https://github.com/Harshita26705/LLM_Evaluation_Dashboard" target="_blank" class="btn btn-secondary">Star on GitHub</a>
     </div>
 </section>
 
 <style>
-.learn-more-hero {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-    padding: 4rem 2rem;
-    text-align: center;
-    color: white;
-}
-
-.learn-more-header h1 {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.learn-more-header p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-
-.learn-more-content {
-    background: var(--bg-color);
-    padding: 3rem 0;
-}
-
-.learn-more-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.learn-section {
-    margin-bottom: 3rem;
-}
-
-.learn-section h2 {
-    color: var(--cyan);
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.learn-section h2 i {
-    color: var(--cyan);
-}
-
-.learn-section p {
-    color: var(--text-color);
-    line-height: 1.8;
-    margin-bottom: 1rem;
-}
-
-.learn-list {
-    list-style: decimal;
-    margin-left: 2rem;
-    color: var(--text-color);
-}
-
-.learn-list li {
-    margin-bottom: 1rem;
-    line-height: 1.8;
-}
-
-.features-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.feature-detail {
-    background: rgba(0, 240, 255, 0.05);
-    border-left: 3px solid var(--cyan);
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.feature-detail h3 {
-    color: var(--cyan);
-    margin-bottom: 0.8rem;
-    font-size: 1.2rem;
-}
-
-.feature-detail p {
-    color: var(--text-color);
-    font-size: 0.95rem;
-}
-
-.metrics-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1.5rem;
-    background: rgba(0, 240, 255, 0.03);
-    border: 1px solid rgba(0, 240, 255, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.metrics-table thead {
-    background: rgba(0, 240, 255, 0.1);
-}
-
-.metrics-table th {
-    padding: 1rem;
-    text-align: left;
-    color: var(--cyan);
-    font-weight: 600;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-}
-
-.metrics-table td {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
-    color: var(--text-color);
-}
-
-.metrics-table tr:hover {
-    background: rgba(0, 240, 255, 0.05);
-}
-
-.use-cases-list {
-    list-style: none;
-    padding: 0;
-    color: var(--text-color);
-}
-
-.use-cases-list li {
-    padding: 0.8rem 1rem;
-    margin-bottom: 0.5rem;
-    border-left: 3px solid var(--cyan);
-    padding-left: 1.5rem;
-    background: rgba(0, 240, 255, 0.02);
-}
-
-.tips-list {
-    list-style: none;
-    padding: 0;
-    color: var(--text-color);
-}
-
-.tips-list li {
-    padding: 0.8rem 1rem;
-    margin-bottom: 0.5rem;
-    border-left: 3px solid var(--cyan);
-    padding-left: 1.5rem;
-    background: rgba(0, 240, 255, 0.02);
-}
-
-.faq-container {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.faq-item {
-    background: rgba(0, 240, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 8px;
-    border-left: 3px solid var(--cyan);
-}
-
-.faq-item h4 {
-    color: var(--cyan);
-    margin-bottom: 0.8rem;
-    font-size: 1.1rem;
-}
-
-.faq-item p {
-    color: var(--text-color);
-    margin-bottom: 0;
-}
-
-.faq-item a {
-    color: var(--cyan);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.faq-item a:hover {
-    text-decoration: underline;
-}
-
-.cta-section {
-    text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
-    border-radius: 8px;
-    margin-top: 3rem;
-}
-
-.cta-section h2 {
-    justify-content: center;
-}
-
-.btn-large {
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
-}
-
-@media (max-width: 768px) {
-    .learn-more-header h1 {
-        font-size: 2rem;
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
-    .learn-section h2 {
-        font-size: 1.5rem;
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
-    .features-list {
-        grid-template-columns: 1fr;
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .metrics-table {
-        font-size: 0.9rem;
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
     }
 
-    .metrics-table th, .metrics-table td {
-        padding: 0.7rem;
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
     }
-}
+
+    .learn-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #003d66 100%);
+        padding: 6rem 2rem;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .learn-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .learn-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite reverse;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-content h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        animation: slideInLeft 0.8s ease-out;
+    }
+
+    .hero-content .gradient-text {
+        color: #00f0ff;
+    }
+
+    .hero-content p {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        animation: slideInRight 0.8s ease-out 0.2s both;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .learn-section {
+        padding: 4rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .section-header h2 {
+        font-size: 2.5rem;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .section-header h2 span {
+        color: #00f0ff;
+    }
+
+    .section-header p {
+        font-size: 1.1rem;
+        color: #a0aec0;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .card {
+        background: rgba(0, 240, 255, 0.05);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .card:hover {
+        background: rgba(0, 240, 255, 0.1);
+        border-color: #00f0ff;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1);
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        color: #00f0ff;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .card h3 {
+        color: white;
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+    }
+
+    .card p {
+        color: #a0aec0;
+        line-height: 1.6;
+    }
+
+    .feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .feature-item {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(0, 240, 255, 0.02) 100%);
+        border-left: 4px solid #00f0ff;
+        padding: 1.5rem;
+        border-radius: 8px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .feature-item h4 {
+        color: #00f0ff;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .feature-item p {
+        color: #cbd5e1;
+        font-size: 0.95rem;
+    }
+
+    .step-container {
+        display: grid;
+        gap: 1.5rem;
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+
+    .step {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        background: rgba(0, 240, 255, 0.05);
+        border-radius: 8px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .step-number {
+        flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        background: #00f0ff;
+        color: #0f172a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.3rem;
+    }
+
+    .step-content h4 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-content p {
+        color: #a0aec0;
+    }
+
+    .code-block {
+        background: #0f172a;
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        overflow-x: auto;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .code-block code {
+        color: #00f0ff;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .highlight-box {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
+        border-left: 4px solid #00f0ff;
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .highlight-box h3 {
+        color: #00f0ff;
+        margin-bottom: 1rem;
+    }
+
+    .highlight-box p {
+        color: #cbd5e1;
+        line-height: 1.8;
+    }
+
+    .cta-final {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
+        border-top: 1px solid rgba(0, 240, 255, 0.2);
+        border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    }
+
+    .cta-final h2 {
+        font-size: 2.2rem;
+        color: white;
+        margin-bottom: 1rem;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .cta-final p {
+        color: #a0aec0;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .btn {
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: #00f0ff;
+        color: #0f172a;
+    }
+
+    .btn-primary:hover {
+        background: #00d9e9;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: #00f0ff;
+        border: 2px solid #00f0ff;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(0, 240, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .hero-content h1 {
+            font-size: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .grid-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .step {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
 </style>
 {% endblock %}
