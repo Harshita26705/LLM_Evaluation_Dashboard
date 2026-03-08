@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify
 import json
 import io
 import math
+import os
 import re
 import ast
 import importlib
@@ -32,7 +33,13 @@ except Exception as e:
     util = None
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     print(f"   ⚠️ SentenceTransformer import unavailable: {e}")
-from detoxify import Detoxify
+try:
+    from detoxify import Detoxify
+    DETOXIFY_AVAILABLE = True
+except Exception as e:
+    Detoxify = None
+    DETOXIFY_AVAILABLE = False
+    print(f"   ⚠️ Detoxify import unavailable: {e}")
 import base64
 
 # Import enhanced code analyzer
@@ -57,6 +64,17 @@ except Exception:
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+
+def _env_flag(name, default=False):
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+IS_RENDER = _env_flag("RENDER", False) or bool(os.getenv("RENDER_EXTERNAL_URL"))
+DISABLE_HEAVY_MODELS = _env_flag("DISABLE_HEAVY_MODELS", IS_RENDER)
+
 # Lazy-loaded models (avoid blocking server startup)
 embedder = None
 tokenizer = None
@@ -69,7 +87,10 @@ def ensure_models_loaded():
     if models_loaded:
         return
     print("⏳ Loading models...")
-    if SENTENCE_TRANSFORMERS_AVAILABLE:
+    if DISABLE_HEAVY_MODELS:
+        print("   ℹ️ Heavy NLP models disabled (using lexical fallbacks)")
+        embedder = None
+    elif SENTENCE_TRANSFORMERS_AVAILABLE:
         try:
             embedder = SentenceTransformer("all-MiniLM-L6-v2")
             print("   ✅ Loaded sentence embedder")
@@ -87,11 +108,18 @@ def ensure_models_loaded():
         print(f"   ⚠️ Could not load tokenizer: {e}")
         tokenizer = None
 
-    try:
-        toxicity_model = Detoxify("original")
-        print("   ✅ Loaded toxicity model")
-    except Exception as e:
-        print(f"   ⚠️ Could not load toxicity model: {e}")
+    if DISABLE_HEAVY_MODELS:
+        print("   ℹ️ Skipping Detoxify model (using lexical toxicity fallback)")
+        toxicity_model = None
+    elif DETOXIFY_AVAILABLE:
+        try:
+            toxicity_model = Detoxify("original")
+            print("   ✅ Loaded toxicity model")
+        except Exception as e:
+            print(f"   ⚠️ Could not load toxicity model: {e}")
+            toxicity_model = None
+    else:
+        print("   ⚠️ Detoxify unavailable; using lexical toxicity fallback")
         toxicity_model = None
 
     models_loaded = True
@@ -654,7 +682,7 @@ def api_evaluate():
     """API endpoint for single response evaluation"""
     try:
         ensure_models_loaded()
-        data = request.json
+        data = request.get_json(silent=True) or {}
         reference = data.get('reference', '').strip()
         response = data.get('response', '').strip()
         
@@ -671,7 +699,7 @@ def api_detect_hallucination():
     """API endpoint for hallucination detection"""
     try:
         ensure_models_loaded()
-        data = request.json
+        data = request.get_json(silent=True) or {}
         reference = data.get('reference', '').strip()
         response = data.get('response', '').strip()
         
@@ -692,7 +720,7 @@ def api_detect_bias():
     """API endpoint for bias detection"""
     try:
         ensure_models_loaded()
-        data = request.json
+        data = request.get_json(silent=True) or {}
         text = data.get('text', '').strip()
         
         if not text:
@@ -713,7 +741,7 @@ def api_check_toxicity():
     """API endpoint for toxicity check"""
     try:
         ensure_models_loaded()
-        data = request.json
+        data = request.get_json(silent=True) or {}
         text = data.get('text', '').strip()
         
         if not text:
@@ -733,7 +761,7 @@ def api_compare_models():
     """API endpoint for multi-model comparison"""
     try:
         ensure_models_loaded()
-        data = request.json
+        data = request.get_json(silent=True) or {}
         question = data.get('question', '').strip()
         models = data.get('models', [])
         
@@ -1015,7 +1043,7 @@ def multimodal_evaluate(image_data, prompt_text, description_text=None):
 def api_evaluate_image():
     """API endpoint for AI image generation evaluation"""
     ensure_models_loaded()
-    data = request.json
+    data = request.get_json(silent=True) or {}
     image_data = data.get('image', '')
     prompt = data.get('prompt', '').strip()
     description = data.get('description', '').strip()
@@ -1221,7 +1249,7 @@ def check_code_quality(code_str):
 def api_analyze_code():
     """API endpoint for code quality analysis"""
     ensure_models_loaded()
-    data = request.json
+    data = request.get_json(silent=True) or {}
     code = data.get('code', '').strip()
     language = data.get('language', 'python').lower()
     
@@ -1252,7 +1280,7 @@ def api_analyze_code_enhanced():
     if not CODE_ANALYZER_AVAILABLE:
         return jsonify({"error": "Enhanced analyzer not available. Install dependencies and start Ollama."}), 503
     
-    data = request.json
+    data = request.get_json(silent=True) or {}
     code = data.get('code', '').strip()
     language = data.get('language', 'python').lower()
     analysis_type = data.get('analysis_type', 'full')  # full, bugs, security, improve
@@ -1285,7 +1313,7 @@ def api_analyze_llm_code():
     if not CODE_ANALYZER_AVAILABLE:
         return jsonify({"error": "Enhanced analyzer not available"}), 503
     
-    data = request.json
+    data = request.get_json(silent=True) or {}
     original_prompt = data.get('prompt', '').strip()
     generated_code = data.get('code', '').strip()
     language = data.get('language', 'python').lower()
@@ -1307,7 +1335,7 @@ def api_analyze_repository():
     if not CODE_ANALYZER_AVAILABLE:
         return jsonify({"error": "Enhanced analyzer not available"}), 503
     
-    data = request.json
+    data = request.get_json(silent=True) or {}
     repo_url = data.get('repo_url', '').strip()
     
     if not repo_url:
@@ -1330,7 +1358,7 @@ def api_analyze_git_diff():
     if not CODE_ANALYZER_AVAILABLE:
         return jsonify({"error": "Enhanced analyzer not available"}), 503
     
-    data = request.json
+    data = request.get_json(silent=True) or {}
     repo_path = data.get('repo_path', '').strip()
     
     if not repo_path:
@@ -1346,11 +1374,15 @@ def api_analyze_git_diff():
 @app.errorhandler(404)
 def not_found(error):
     """Handle 404 errors"""
+    if request.path.startswith('/api/'):
+        return jsonify({"error": "Endpoint not found"}), 404
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(error):
     """Handle 500 errors"""
+    if request.path.startswith('/api/'):
+        return jsonify({"error": "Internal server error"}), 500
     return render_template('500.html'), 500
 
 if __name__ == '__main__':

@@ -305,6 +305,30 @@
     });
 
     // API Functions
+    async function parseApiJson(response) {
+        const raw = await response.text();
+
+        if (!raw || !raw.trim()) {
+            return {
+                valid: false,
+                data: { error: `Server returned an empty response (HTTP ${response.status}).` }
+            };
+        }
+
+        try {
+            return { valid: true, data: JSON.parse(raw) };
+        } catch (error) {
+            return {
+                valid: false,
+                data: { error: `Server returned invalid JSON (HTTP ${response.status}).` }
+            };
+        }
+    }
+
+    function formatApiError(message) {
+        return `<div class="error-message">${escapeHtml(message || 'Request failed')}</div>`;
+    }
+
     async function evaluateSingleResponse() {
         const reference = document.getElementById('sr-reference').value.trim();
         const response = document.getElementById('sr-response').value.trim();
@@ -323,15 +347,22 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ reference, response })
             });
-            const data = await res.json();
+            const parsed = await parseApiJson(res);
+
+            if (!parsed.valid) {
+                resultsDiv.innerHTML = formatApiError(parsed.data.error);
+                return;
+            }
+
+            const data = parsed.data;
 
             if (res.ok) {
                 resultsDiv.innerHTML = formatResults(data);
             } else {
-                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                resultsDiv.innerHTML = formatApiError(data.error || `Evaluation failed (HTTP ${res.status}).`);
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            resultsDiv.innerHTML = formatApiError(`Error: ${error.message}`);
         }
     }
 
@@ -353,7 +384,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ reference, response })
             });
-            const data = await res.json();
+            const parsed = await parseApiJson(res);
+
+            if (!parsed.valid) {
+                resultsDiv.innerHTML = formatApiError(parsed.data.error);
+                return;
+            }
+
+            const data = parsed.data;
 
             if (res.ok) {
                 const hallucinatedEntities = (data.hallucinated_entities || []).map(entity => {
@@ -377,10 +415,10 @@
                     </div>
                 `;
             } else {
-                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                resultsDiv.innerHTML = formatApiError(data.error || `Hallucination check failed (HTTP ${res.status}).`);
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            resultsDiv.innerHTML = formatApiError(`Error: ${error.message}`);
         }
     }
 
@@ -401,7 +439,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text })
             });
-            const data = await res.json();
+            const parsed = await parseApiJson(res);
+
+            if (!parsed.valid) {
+                resultsDiv.innerHTML = formatApiError(parsed.data.error);
+                return;
+            }
+
+            const data = parsed.data;
 
             if (res.ok) {
                 const entityAnalysis = data.entity_analysis || {};
@@ -423,10 +468,10 @@
                     </div>
                 `;
             } else {
-                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                resultsDiv.innerHTML = formatApiError(data.error || `Bias analysis failed (HTTP ${res.status}).`);
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            resultsDiv.innerHTML = formatApiError(`Error: ${error.message}`);
         }
     }
 
@@ -447,7 +492,14 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text })
             });
-            const data = await res.json();
+            const parsed = await parseApiJson(res);
+
+            if (!parsed.valid) {
+                resultsDiv.innerHTML = formatApiError(parsed.data.error);
+                return;
+            }
+
+            const data = parsed.data;
 
             if (res.ok) {
                 resultsDiv.innerHTML = `
@@ -463,10 +515,10 @@
                     </div>
                 `;
             } else {
-                resultsDiv.innerHTML = `<div class="error-message">${data.error}</div>`;
+                resultsDiv.innerHTML = formatApiError(data.error || `Toxicity check failed (HTTP ${res.status}).`);
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            resultsDiv.innerHTML = formatApiError(`Error: ${error.message}`);
         }
     }
 
