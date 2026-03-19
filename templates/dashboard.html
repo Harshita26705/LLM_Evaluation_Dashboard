@@ -201,7 +201,6 @@
                         <option value="bugs">🐛 Bug Detection</option>
                         <option value="security">🔒 Security Vulnerabilities</option>
                         <option value="improve">✨ Get Improved Code</option>
-                        <option value="documentation">📚 Generate Documentation</option>
                         <option value="llm_eval">🤖 Evaluate LLM-Generated Code</option>
                         <option value="basic">📊 Basic Analysis (No AI)</option>
                     </select>
@@ -566,7 +565,7 @@
                     ['Safety Score', 'Safety Score']
                 ];
 
-                let html = '';
+                let html = '<div class="multimodal-results">';
 
                 // Row 1: Core Metrics in one flex row
                 html += '<div class="results-grid multimodal-metrics-row">';
@@ -589,13 +588,13 @@
                 });
                 html += '</div>';
 
-                // Row 2: Detailed Analysis
+                // Row 2: Detailed Analysis + Image Properties
+                html += '<div class="results-grid multimodal-info-row">';
                 html += '<div class="result-card multimodal-detail-row">';
                 html += '<h4>📋 Detailed Analysis</h4>';
                 html += `<pre style="white-space: pre-wrap; background: var(--bg-color); padding: 1.5rem; border-radius: 0.8rem; margin-top: 1rem; line-height: 1.8; font-size: 1.1rem;">${escapeHtml(data.explanation || 'No detailed explanation available.')}</pre>`;
                 html += '</div>';
 
-                // Row 3: Image Properties
                 html += '<div class="result-card multimodal-props-row">';
                 html += '<h4>📐 Image Properties</h4>';
                 html += '<div style="margin-top: 1rem;">';
@@ -606,6 +605,8 @@
                     }
                 });
                 html += '</div></div>';
+                html += '</div>';
+                html += '</div>';
 
                 resultsDiv.innerHTML = html;
             };

@@ -233,37 +233,43 @@ Return ONLY the improved code. Keep valid syntax and left-aligned formatting."""
         }
     
     def generate_documentation(self, code: str, language: str = "python") -> Dict:
-        """Generate project-level README documentation and save it to disk."""
+        """Generate README documentation for the uploaded code snippet and save it to disk."""
 
         static_analysis = self._static_analysis(code, language)
         base_doc = self._basic_documentation(code, language, static_analysis)
-
-        project_files = self._collect_project_files(os.getcwd())
-        project_snapshot = "\n".join(f"- {path}" for path in project_files[:40])
+        outline = self._extract_code_outline(code, language, static_analysis)
 
         ai_doc = self._call_ollama(
             (
-                f"Write a README for this project in Markdown.\n\n"
-                f"Project files:\n{project_snapshot}\n\n"
-                f"Key code snippet ({language}):\n{code}\n\n"
-                "Include: overview, architecture, setup, run instructions, and key modules."
+                f"Write a README in Markdown that explains ONLY this uploaded {language} code snippet.\n\n"
+                f"Code snippet:\n```{language}\n{code}\n```\n\n"
+                "Requirements:\n"
+                "1. Explain what the snippet does.\n"
+                "2. Explain key functions/classes/imports.\n"
+                "3. Include usage notes and limitations.\n"
+                "4. Suggest practical improvements.\n"
+                "5. Do not describe repository-wide architecture."
             ),
-            "You are a technical writer. Use clear Markdown with practical developer guidance."
+            "You are a senior technical writer creating concise developer READMEs."
         )
 
-        snippet_doc = ai_doc if ai_doc and not ai_doc.startswith("ERROR") else base_doc
-        documentation = self._compose_project_readme(snippet_doc, project_files)
+        ai_doc = ai_doc.strip() if ai_doc and not ai_doc.startswith("ERROR") else ""
+        documentation = self._compose_uploaded_code_readme(
+            code=code,
+            language=language,
+            analysis=static_analysis,
+            outline=outline,
+            fallback_doc=base_doc,
+            ai_doc=ai_doc
+        )
 
         readme_path = os.path.join(os.getcwd(), "README_GENERATED.md")
         with open(readme_path, "w", encoding="utf-8") as readme_file:
             readme_file.write(documentation)
 
+        # Preserve response shape used by the UI, but avoid mutating primary README.
         primary_readme_path = os.path.join(os.getcwd(), "README.md")
         primary_readme_created = False
-        if not os.path.exists(primary_readme_path):
-            with open(primary_readme_path, "w", encoding="utf-8") as primary_readme_file:
-                primary_readme_file.write(documentation)
-            primary_readme_created = True
 
         return {
             "code": code,
@@ -272,7 +278,8 @@ Return ONLY the improved code. Keep valid syntax and left-aligned formatting."""
             "readme_path": readme_path,
             "primary_readme_path": primary_readme_path,
             "primary_readme_created": primary_readme_created,
-            "project_files_analyzed": len(project_files)
+            "project_files_analyzed": 1,
+            "snippet_focus": True
         }
     
     def analyze_llm_generated_code(self, original_prompt: str, generated_code: str, language: str = "python") -> Dict:
@@ -965,6 +972,133 @@ Use Markdown format."""
             "",
             "## Detailed Documentation",
             generated_doc.strip() or "No additional documentation available.",
+            ""
+        ])
+
+        return "\n".join(lines)
+
+    def _extract_code_outline(self, code: str, language: str, analysis: Dict) -> Dict[str, List[str]]:
+        outline = {
+            "functions": [],
+            "classes": [],
+            "imports": []
+        }
+
+        if language == "python" and analysis.get("syntax_valid"):
+            try:
+                tree = ast.parse(code)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        outline["functions"].append(node.name)
+                    elif isinstance(node, ast.ClassDef):
+                        outline["classes"].append(node.name)
+                    elif isinstance(node, ast.Import):
+                        for alias in node.names:
+                            outline["imports"].append(alias.name.split(".")[0])
+                    elif isinstance(node, ast.ImportFrom) and node.module:
+                        outline["imports"].append(node.module.split(".")[0])
+            except Exception:
+                pass
+
+        if not outline["imports"]:
+            for match in re.findall(r"^\s*(?:from\s+([A-Za-z0-9_\.]+)\s+import|import\s+([A-Za-z0-9_\.]+))", code, flags=re.MULTILINE):
+                module_name = match[0] or match[1]
+                if module_name:
+                    outline["imports"].append(module_name.split(".")[0])
+
+        for key in outline:
+            deduped = []
+            seen = set()
+            for value in outline[key]:
+                normalized = str(value).strip()
+                if not normalized or normalized in seen:
+                    continue
+                seen.add(normalized)
+                deduped.append(normalized)
+            outline[key] = deduped
+
+        return outline
+
+    def _compose_uploaded_code_readme(
+        self,
+        code: str,
+        language: str,
+        analysis: Dict,
+        outline: Dict[str, List[str]],
+        fallback_doc: str,
+        ai_doc: str
+    ) -> str:
+        metrics = analysis.get("metrics", {})
+        errors = analysis.get("errors", [])
+        suggestions = analysis.get("suggestions", [])
+        syntax_valid = "Yes" if analysis.get("syntax_valid") else "No"
+
+        lines = [
+            "# Uploaded Code README",
+            "",
+            "## Overview",
+            "This README was generated from the code snippet submitted in the dashboard UI.",
+            "",
+            "## Language",
+            f"- `{language}`",
+            "",
+            "## Code Summary",
+            f"- Functions: {len(outline.get('functions', []))}",
+            f"- Classes: {len(outline.get('classes', []))}",
+            f"- Imported modules: {len(outline.get('imports', []))}",
+            "",
+            "## Structure",
+            "### Functions"
+        ]
+
+        functions = outline.get("functions", [])
+        if functions:
+            lines.extend([f"- `{name}()`" for name in functions])
+        else:
+            lines.append("- No top-level functions detected.")
+
+        lines.extend(["", "### Classes"])
+        classes = outline.get("classes", [])
+        if classes:
+            lines.extend([f"- `{name}`" for name in classes])
+        else:
+            lines.append("- No classes detected.")
+
+        lines.extend(["", "### Imports / Dependencies"])
+        imports = outline.get("imports", [])
+        if imports:
+            lines.extend([f"- `{name}`" for name in imports])
+        else:
+            lines.append("- No explicit imports detected.")
+
+        lines.extend(["", "## Quality Snapshot", f"- Syntax valid: {syntax_valid}"])
+        for metric_name, metric_value in metrics.items():
+            lines.append(f"- {metric_name}: {metric_value}")
+
+        lines.extend(["", "## Issues Found"])
+        if errors:
+            lines.extend([f"- {item}" for item in errors])
+        else:
+            lines.append("- No errors detected by static analysis.")
+
+        lines.extend(["", "## Suggested Improvements"])
+        if suggestions:
+            lines.extend([f"- {item}" for item in suggestions])
+        else:
+            lines.append("- No additional suggestions.")
+
+        lines.extend(["", "## Explanation"])
+        if ai_doc:
+            lines.append(ai_doc)
+        else:
+            lines.append(fallback_doc.strip() or "No additional explanation available.")
+
+        lines.extend([
+            "",
+            "## Uploaded Code",
+            f"```{language}",
+            code.rstrip("\n"),
+            "```",
             ""
         ])
 
