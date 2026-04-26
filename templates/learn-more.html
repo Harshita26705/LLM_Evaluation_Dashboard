@@ -22,7 +22,7 @@
         <p>An open-source platform for comprehensive LLM evaluation and analysis</p>
     </div>
 
-    <p style="color: #cbd5e1; font-size: 1.1rem; line-height: 1.8; text-align: left; max-width: 900px; margin: 0 auto 3rem;">
+    <p style="color: #cbd5e1; font-size: 1.1rem; line-height: 1.8; text-align: left; max-width: 56.25rem; margin: 0 auto 3rem;">
         LLM Evaluator is a powerful, easy-to-use platform designed to comprehensively evaluate Large Language Model responses. Whether you're a researcher fine-tuning models, a developer building AI applications, or an enthusiast exploring language models, our suite of evaluation tools provides deep insights into response quality, safety, fairness, and factuality.
     </p>
 
@@ -220,7 +220,7 @@
     @keyframes slideInLeft {
         from {
             opacity: 0;
-            transform: translateX(-50px);
+            transform: translateX(-3.125rem);
         }
         to {
             opacity: 1;
@@ -231,7 +231,7 @@
     @keyframes slideInRight {
         from {
             opacity: 0;
-            transform: translateX(50px);
+            transform: translateX(3.125rem);
         }
         to {
             opacity: 1;
@@ -242,7 +242,7 @@
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(1.875rem);
         }
         to {
             opacity: 1;
@@ -261,17 +261,17 @@
 
     @keyframes float {
         0%, 100% {
-            transform: translateY(0px);
+            transform: translateY(0rem);
         }
         50% {
-            transform: translateY(-10px);
+            transform: translateY(-0.625rem);
         }
     }
 
     .learn-hero {
         background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #003d66 100%);
         padding-top: 10rem;
-        padding-bottom: 20px;
+        padding-bottom: 1.25rem;
         text-align: center;
         color: white;
         position: relative;
@@ -283,8 +283,8 @@
         position: absolute;
         top: -50%;
         right: -10%;
-        width: 400px;
-        height: 400px;
+        width: 25rem;
+        height: 25rem;
         background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
         border-radius: 50%;
         animation: float 6s ease-in-out infinite;
@@ -295,8 +295,8 @@
         position: absolute;
         bottom: -30%;
         left: -5%;
-        width: 300px;
-        height: 300px;
+        width: 18.75rem;
+        height: 18.75rem;
         background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 70%);
         border-radius: 50%;
         animation: float 8s ease-in-out infinite reverse;
@@ -333,8 +333,8 @@
     }
 
     .learn-section {
-        padding: 0px;
-        max-width: 1200px;
+        padding: 0rem;
+        max-width: 75rem;
         margin: 0 auto;
     }
 
@@ -361,15 +361,15 @@
 
     .grid-3 {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(2rem, 1fr));
         gap: 2rem;
         margin-bottom: 3rem;
     }
 
     .card {
         background: rgba(0, 240, 255, 0.05);
-        border: 1px solid rgba(0, 240, 255, 0.2);
-        border-radius: 12px;
+        border: 0.0625rem solid rgba(0, 240, 255, 0.2);
+        border-radius: 0.75rem;
         padding: 2rem;
         transition: all 0.3s ease;
         animation: fadeInUp 0.6s ease-out;
@@ -378,8 +378,8 @@
     .card:hover {
         background: rgba(0, 240, 255, 0.1);
         border-color: #00f0ff;
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 240, 255, 0.1);
+        transform: translateY(-0.3125rem);
+        box-shadow: 0 0.625rem 1.875rem rgba(0, 240, 255, 0.1);
     }
 
     .card-icon {
@@ -402,16 +402,16 @@
 
     .feature-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
         gap: 1.5rem;
         margin-bottom: 3rem;
     }
 
     .feature-item {
         background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(0, 240, 255, 0.02) 100%);
-        border-left: 4px solid #00f0ff;
+        border-left: 0.25rem solid #00f0ff;
         padding: 1.5rem;
-        border-radius: 8px;
+        border-radius: 0.5rem;
         animation: fadeInUp 0.6s ease-out;
     }
 
@@ -429,7 +429,7 @@
     .step-container {
         display: grid;
         gap: 1.5rem;
-        max-width: 800px;
+        max-width: 5rem;
         margin: 2rem auto;
     }
 
@@ -438,14 +438,14 @@
         gap: 1.5rem;
         padding: 1.5rem;
         background: rgba(0, 240, 255, 0.05);
-        border-radius: 8px;
+        border-radius: 0.5rem;
         animation: fadeInUp 0.6s ease-out;
     }
 
     .step-number {
         flex-shrink: 0;
-        width: 50px;
-        height: 50px;
+        width: 3.125rem;
+        height: 3.125rem;
         background: #00f0ff;
         color: #0f172a;
         border-radius: 50%;
@@ -467,8 +467,8 @@
 
     .code-block {
         background: #0f172a;
-        border: 1px solid rgba(0, 240, 255, 0.2);
-        border-radius: 8px;
+        border: 0.0625rem solid rgba(0, 240, 255, 0.2);
+        border-radius: 0.5rem;
         padding: 1.5rem;
         margin: 1.5rem 0;
         overflow-x: auto;
@@ -484,9 +484,9 @@
 
     .highlight-box {
         background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
-        border-left: 4px solid #00f0ff;
+        border-left: 0.25rem solid #00f0ff;
         padding: 2rem;
-        border-radius: 8px;
+        border-radius: 0.5rem;
         margin: 2rem 0;
         animation: fadeInUp 0.6s ease-out;
     }
@@ -505,8 +505,8 @@
         text-align: center;
         padding: 4rem 2rem;
         background: linear-gradient(135deg, rgba(0, 240, 255, 0.1) 0%, rgba(0, 240, 255, 0.05) 100%);
-        border-top: 1px solid rgba(0, 240, 255, 0.2);
-        border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        border-top: 0.0625rem solid rgba(0, 240, 255, 0.2);
+        border-bottom: 0.0625rem solid rgba(0, 240, 255, 0.2);
     }
 
     .cta-final h2 {
@@ -533,7 +533,7 @@
 
     .btn {
         padding: 0.8rem 2rem;
-        border-radius: 8px;
+        border-radius: 0.5rem;
         font-weight: 600;
         text-decoration: none;
         border: none;
@@ -549,22 +549,22 @@
 
     .btn-primary:hover {
         background: #00d9e9;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 240, 255, 0.3);
+        transform: translateY(-0.125rem);
+        box-shadow: 0 0.625rem 1.25rem rgba(0, 240, 255, 0.3);
     }
 
     .btn-secondary {
         background: transparent;
         color: #00f0ff;
-        border: 2px solid #00f0ff;
+        border: 0.125rem solid #00f0ff;
     }
 
     .btn-secondary:hover {
         background: rgba(0, 240, 255, 0.1);
-        transform: translateY(-2px);
+        transform: translateY(-0.125rem);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 48rem) {
         .hero-content h1 {
             font-size: 2rem;
         }

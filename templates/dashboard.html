@@ -10,29 +10,46 @@
     </div>
 </section>
 
+<div class="tabs-header sticky-tabs">
+    <button class="tab-btn active" data-tab="single-response">
+        <i class="fa-solid fa-message"></i> Single Response
+    </button>
+    <button class="tab-btn" data-tab="hallucination">
+        <i class="fa-solid fa-triangle-exclamation"></i> Hallucination
+    </button>
+    <button class="tab-btn" data-tab="bias">
+        <i class="fa-solid fa-scale-balanced"></i> Bias Detection
+    </button>
+    <button class="tab-btn" data-tab="toxicity">
+        <i class="fa-solid fa-shield-virus"></i> Toxicity
+    </button>
+    <button class="tab-btn" data-tab="multi-model">
+        <i class="fa-solid fa-code-compare"></i> Multi-Model
+    </button>
+    <button class="tab-btn" data-tab="code-analysis">
+        <i class="fa-solid fa-code"></i> Code Analysis
+    </button>
+    <button class="tab-btn" data-tab="multimodal">
+        <i class="fa-solid fa-images"></i> Multimodal
+    </button>
+</div>
+
 <section class="dashboard-container">
-    <div class="tabs-header">
-        <button class="tab-btn active" data-tab="single-response">
-            <i class="fa-solid fa-message"></i> Single Response
-        </button>
-        <button class="tab-btn" data-tab="hallucination">
-            <i class="fa-solid fa-triangle-exclamation"></i> Hallucination
-        </button>
-        <button class="tab-btn" data-tab="bias">
-            <i class="fa-solid fa-scale-balanced"></i> Bias Detection
-        </button>
-        <button class="tab-btn" data-tab="toxicity">
-            <i class="fa-solid fa-shield-virus"></i> Toxicity
-        </button>
-        <button class="tab-btn" data-tab="multi-model">
-            <i class="fa-solid fa-code-compare"></i> Multi-Model
-        </button>
-        <button class="tab-btn" data-tab="code-analysis">
-            <i class="fa-solid fa-code"></i> Code Analysis
-        </button>
-        <button class="tab-btn" data-tab="multimodal">
-            <i class="fa-solid fa-images"></i> Multimodal
-        </button>
+
+    <div class="dataset-upload-bar">
+        <div class="dataset-upload-primary">
+            <button class="btn btn-secondary btn-sm" id="datasetUploadBtn" type="button">
+                <i class="fa-solid fa-upload"></i> Upload Dataset (CSV/JSON)
+            </button>
+            <span id="datasetUploadStatus" class="dataset-upload-status">No dataset loaded</span>
+        </div>
+        <input id="datasetUploadInput" type="file" accept=".csv,.json,text/csv,application/json,text/json" style="display: none;">
+        <div class="dataset-question-picker">
+            <label for="datasetQuestionSelect">Select Question</label>
+            <select id="datasetQuestionSelect" disabled>
+                <option value="">Upload a dataset first</option>
+            </select>
+        </div>
     </div>
 
     <!-- Tab 1: Single Response Evaluation -->
@@ -41,6 +58,10 @@
             <div class="eval-input">
                 <h3>Single Response Evaluation</h3>
                 <p class="tab-desc">Evaluate LLM responses against reference text using multiple quality metrics.</p>
+                <div class="input-group">
+                    <label>Question</label>
+                    <textarea id="sr-question" placeholder="Enter question..." rows="3"></textarea>
+                </div>
                 <div class="input-group">
                     <label>Reference/Query Text</label>
                     <textarea id="sr-reference" placeholder="Enter reference or query text..." rows="4"></textarea>
@@ -196,7 +217,7 @@
                 
                 <div class="input-group">
                     <label>Analysis Type</label>
-                    <select id="analysis-type" onchange="togglePromptField()" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 2px solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem; font-size: 1.4rem;">
+                    <select id="analysis-type" onchange="togglePromptField()" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 0.125rem solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem; font-size: 1.4rem;">
                         <option value="full">🔍 Full AI Analysis (Bugs + Security + Improvements)</option>
                         <option value="bugs">🐛 Bug Detection</option>
                         <option value="security">🔒 Security Vulnerabilities</option>
@@ -208,7 +229,7 @@
 
                 <div class="input-group">
                     <label>Programming Language</label>
-                    <select id="code-language" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 2px solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem; font-size: 1.4rem;">
+                    <select id="code-language" style="width: 100%; padding: 1rem; background: var(--snd-bg-color); color: var(--text-color); border: 0.125rem solid rgba(0, 240, 255, 0.2); border-radius: 0.8rem; font-size: 1.4rem;">
                         <option value="python">Python</option>
                         <option value="javascript">JavaScript</option>
                         <option value="java">Java</option>
@@ -262,7 +283,7 @@
                         <label for="mm-image" class="file-upload-btn"><i class="fa-solid fa-image"></i> Choose Image</label>
                         <span id="mm-file-name" class="file-upload-name">No file chosen</span>
                     </div>
-                    <img id="image-preview" style="display:none; max-width:100%; margin-top:1rem; border-radius:1rem; border: 2px solid var(--main-color);">
+                    <img id="image-preview" style="display:none; max-width:100%; margin-top:1rem; border-radius:1rem; border: 0.125rem solid var(--main-color);">
                 </div>
                 <div class="input-group">
                     <label>📝 Original Prompt (What you asked the AI to create)</label>
@@ -289,8 +310,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
+    const datasetPairs = [];
+
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -302,6 +326,8 @@
             btn.classList.add('active');
         });
     });
+
+    setupDatasetControls();
 
     // API Functions
     async function parseApiJson(response) {
@@ -326,6 +352,240 @@
 
     function formatApiError(message) {
         return `<div class="error-message">${escapeHtml(message || 'Request failed')}</div>`;
+    }
+
+    function setupDatasetControls() {
+        const uploadBtn = document.getElementById('datasetUploadBtn');
+        const fileInput = document.getElementById('datasetUploadInput');
+        const questionSelect = document.getElementById('datasetQuestionSelect');
+
+        if (!uploadBtn || !fileInput || !questionSelect) {
+            return;
+        }
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleDatasetUpload);
+        questionSelect.addEventListener('change', handleQuestionSelection);
+    }
+
+    function handleDatasetUpload(event) {
+        const fileInput = event.target;
+        const file = fileInput.files && fileInput.files[0];
+        const statusEl = document.getElementById('datasetUploadStatus');
+
+        if (!file) {
+            return;
+        }
+
+        const lowerName = file.name.toLowerCase();
+        const isCsv = lowerName.endsWith('.csv');
+        const isJson = lowerName.endsWith('.json');
+
+        if (!isCsv && !isJson) {
+            if (statusEl) {
+                statusEl.textContent = 'Please upload a CSV or JSON file';
+            }
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const rawText = String(reader.result || '');
+            const parsedPairs = parseDatasetContent(file.name, rawText);
+
+            datasetPairs.length = 0;
+            parsedPairs.forEach(pair => datasetPairs.push(pair));
+
+            populateQuestionDropdown();
+
+            if (statusEl) {
+                statusEl.textContent = `${datasetPairs.length} question-answer pairs loaded from ${isJson ? 'JSON' : 'CSV'}`;
+            }
+        };
+
+        reader.onerror = () => {
+            if (statusEl) {
+                statusEl.textContent = 'Could not read CSV file';
+            }
+        };
+
+        reader.readAsText(file);
+    }
+
+    function parseDatasetContent(fileName, rawText) {
+        const lowerName = String(fileName || '').toLowerCase();
+        const trimmed = String(rawText || '').trim();
+
+        if (!trimmed) {
+            return [];
+        }
+
+        const seemsJson = lowerName.endsWith('.json') || trimmed.startsWith('[') || trimmed.startsWith('{');
+        if (seemsJson) {
+            return parseDatasetJson(trimmed);
+        }
+
+        return parseDatasetCsv(trimmed);
+    }
+
+    function parseDatasetJson(jsonText) {
+        try {
+            const parsed = JSON.parse(jsonText);
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+            const pairs = [];
+            parsed.forEach((item) => {
+                if (!item || typeof item !== 'object') {
+                    return;
+                }
+
+                const question = String(item.question ?? item.questions ?? '').trim();
+                const answer = String(item.answer ?? item.answers ?? '').trim();
+                if (!question || !answer) {
+                    return;
+                }
+
+                pairs.push({ question, answer });
+            });
+
+            return pairs;
+        } catch (_error) {
+            return [];
+        }
+    }
+
+    function parseDatasetCsv(csvText) {
+        const lines = csvText
+            .split(/\r?\n/)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        if (!lines.length) {
+            return [];
+        }
+
+        const headerCells = parseCsvRow(lines[0]).map(cell => cell.trim().toLowerCase());
+        let qIndex = headerCells.findIndex(col => ['question', 'questions'].includes(col));
+        let aIndex = headerCells.findIndex(col => ['answer', 'answers'].includes(col));
+
+        let startIndex = 1;
+        if (qIndex === -1 || aIndex === -1) {
+            qIndex = 0;
+            aIndex = 1;
+            startIndex = 0;
+        }
+
+        const pairs = [];
+        for (let i = startIndex; i < lines.length; i++) {
+            const row = parseCsvRow(lines[i]);
+            const question = (row[qIndex] || '').trim();
+            const answer = (row[aIndex] || '').trim();
+
+            if (!question || !answer) {
+                continue;
+            }
+
+            pairs.push({ question, answer });
+        }
+
+        return pairs;
+    }
+
+    function parseCsvRow(line) {
+        const cells = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const next = line[i + 1];
+
+            if (char === '"') {
+                if (inQuotes && next === '"') {
+                    current += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+
+            if (char === ',' && !inQuotes) {
+                cells.push(current);
+                current = '';
+                continue;
+            }
+
+            current += char;
+        }
+
+        cells.push(current);
+        return cells;
+    }
+
+    function populateQuestionDropdown() {
+        const questionSelect = document.getElementById('datasetQuestionSelect');
+        if (!questionSelect) {
+            return;
+        }
+
+        questionSelect.innerHTML = '';
+
+        if (!datasetPairs.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No valid question-answer pairs found';
+            questionSelect.appendChild(option);
+            questionSelect.disabled = true;
+            return;
+        }
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select question';
+        questionSelect.appendChild(defaultOption);
+
+        datasetPairs.forEach((pair, index) => {
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = pair.question;
+            questionSelect.appendChild(option);
+        });
+
+        questionSelect.disabled = false;
+    }
+
+    function handleQuestionSelection(event) {
+        const index = Number(event.target.value);
+        if (Number.isNaN(index) || !datasetPairs[index]) {
+            return;
+        }
+
+        applyDatasetSelection(datasetPairs[index]);
+    }
+
+    function applyDatasetSelection(pair) {
+        const setValue = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.value = value;
+            }
+        };
+
+        // Fill question/reference fields
+        setValue('sr-question', pair.question);
+        setValue('sr-reference', pair.answer);
+        setValue('hall-reference', pair.answer);
+        setValue('mmc-question', pair.question);
+
+        // Keep model response fields for manual entry
+        setValue('sr-response', '');
+        setValue('hall-response', '');
+        setValue('mmc-model1-response', '');
+        setValue('mmc-model2-response', '');
+        setValue('mmc-model3-response', '');
     }
 
     async function evaluateSingleResponse() {
@@ -725,24 +985,29 @@
             html += `<div class="comparison-header"><h4>Comparing ${models.length} Models</h4></div>`;
             
             html += '<table class="comparison-table">';
-            html += '<thead><tr><th>Model</th><th>Relevance</th><th>ROUGE-1</th><th>Coherence</th><th>Toxicity</th><th>Bias</th><th>Overall</th></tr></thead>';
+            html += '<thead><tr><th>Model</th><th>Relevance</th><th>Hallucination</th><th>Coherence</th><th>Toxicity</th><th>Bias</th><th>LLM Judge</th><th>Overall</th></tr></thead>';
             html += '<tbody>';
             
             data.comparisons.forEach((comp, idx) => {
                 const isWinner = idx === data.winner_index;
                 const rowClass = isWinner ? 'winner-row' : '';
+                const overallScore = comp.blended_score !== undefined ? comp.blended_score : comp.final_score;
                 html += `<tr class="${rowClass}">`;
                 html += `<td><strong>${comp.model_name}</strong> ${isWinner ? '🏆' : ''}</td>`;
                 html += `<td>${(comp.relevance * 100).toFixed(1)}%</td>`;
-                html += `<td>${(comp.rouge1_f1 * 100).toFixed(1)}%</td>`;
+                html += `<td style="color: ${getRiskColor(comp.hallucination_risk)}">${(comp.hallucination_risk * 100).toFixed(1)}%</td>`;
                 html += `<td>${(comp.coherence * 100).toFixed(1)}%</td>`;
                 html += `<td style="color: ${getScoreColor(comp.toxicity_penalty)}">${(comp.toxicity_penalty * 100).toFixed(1)}%</td>`;
                 html += `<td style="color: ${getScoreColor(comp.bias_penalty)}">${(comp.bias_penalty * 100).toFixed(1)}%</td>`;
-                html += `<td><strong style="color: #00ff00">${(comp.final_score * 100).toFixed(1)}%</strong></td>`;
+                html += `<td>${(comp.llm_judge_score * 100).toFixed(1)}%</td>`;
+                html += `<td><strong style="color: #00ff00">${(overallScore * 100).toFixed(1)}%</strong></td>`;
                 html += '</tr>';
             });
             
             html += '</tbody></table>';
+            if (data.llm_judge_used === false) {
+                html += '<p style="margin-top:1rem;color:#9eb0c8;font-size:1.2rem;">LLM judge endpoint unavailable. Fallback judge scoring was used.</p>';
+            }
             html += `<div class="winner-announcement"><h3>🏆 Winner: ${data.winner}</h3></div>`;
             html += '</div>';
             
@@ -830,7 +1095,7 @@
                     bugs.forEach(bug => {
                         const colors = { 'critical': '#ff0000', 'high': '#ff4444', 'medium': '#ffaa00', 'low': '#ffcc00' };
                         const color = colors[bug.severity?.toLowerCase()] || '#ffaa00';
-                        html += `<div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(255,68,68,0.1); border-left: 4px solid ${color}; border-radius: 0.5rem;">`;
+                        html += `<div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(255,68,68,0.1); border-left: 0.25rem solid ${color}; border-radius: 0.5rem;">`;
                         html += `<h4 style="color: ${color}; margin-bottom: 0.8rem;">⚠️ ${bug.severity || 'Medium'} Severity</h4>`;
                         html += `<p style="font-size: 1.4rem; line-height: 1.6;">${bug.description || bug.issue || bug}</p>`;
                         if (bug.suggestion || bug.fix) html += `<p style="margin-top: 0.8rem; color: #00ff88;">💡 ${bug.suggestion || bug.fix}</p>`;
@@ -852,7 +1117,7 @@
                 html += '<h3>🔒 Security Vulnerabilities</h3>';
                 if (issues.length > 0) {
                     issues.forEach(issue => {
-                        html += `<div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(255,136,0,0.1); border-left: 4px solid #ff8800; border-radius: 0.5rem;">`;
+                        html += `<div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(255,136,0,0.1); border-left: 0.25rem solid #ff8800; border-radius: 0.5rem;">`;
                         html += `<h4 style="color: #ff8800; margin-bottom: 0.8rem;">🛡️ ${issue.type || 'Security Issue'}</h4>`;
                         html += `<p style="font-size: 1.4rem; line-height: 1.6;">${issue.description || issue.issue || issue}</p>`;
                         if (issue.recommendation) html += `<p style="margin-top: 0.8rem; color: #00bcd4;">🔧 ${issue.recommendation}</p>`;
@@ -882,22 +1147,22 @@
             }
 
             if (analysisType === 'llm_eval' && aiData.evaluation) {
-                const eval = aiData.evaluation;
-                const scoreColor = eval.quality_score > 80 ? '#00ff88' : eval.quality_score > 60 ? '#00bcd4' : '#ffaa00';
+                const evaluationData = aiData.evaluation;
+                const scoreColor = evaluationData.quality_score > 80 ? '#00ff88' : evaluationData.quality_score > 60 ? '#00bcd4' : '#ffaa00';
                 html += '<div class="code-analysis-row">';
                 html += '<div class="result-card" style="border-color: #00bcd4;">';
                 html += '<h3>🤖 LLM Code Evaluation</h3>';
-                html += `<div style="font-size: 3rem; color: ${scoreColor}; margin: 1rem 0;">${eval.quality_score}/100</div>`;
-                html += `<p style="line-height: 1.8;">Matches prompt: <strong>${eval.matches_prompt ? 'Yes' : 'No'}</strong> (${((eval.match_ratio || 0) * 100).toFixed(1)}%)</p>`;
-                if (Array.isArray(eval.issues) && eval.issues.length > 0) {
+                html += `<div style="font-size: 3rem; color: ${scoreColor}; margin: 1rem 0;">${evaluationData.quality_score}/100</div>`;
+                html += `<p style="line-height: 1.8;">Matches prompt: <strong>${evaluationData.matches_prompt ? 'Yes' : 'No'}</strong> (${((evaluationData.match_ratio || 0) * 100).toFixed(1)}%)</p>`;
+                if (Array.isArray(evaluationData.issues) && evaluationData.issues.length > 0) {
                     html += '<h4 style="margin-top: 1.2rem; color: #ff8a8a;">Detected Issues</h4>';
                     html += '<ul style="margin: 0.8rem 0 0 2rem;">';
-                    eval.issues.forEach(issue => {
+                    evaluationData.issues.forEach(issue => {
                         html += `<li style="margin-bottom: 0.6rem; color: #ffb3b3; font-size: 1.3rem;">${escapeHtml(issue)}</li>`;
                     });
                     html += '</ul>';
                 }
-                if (eval.analysis) html += `<p style="line-height: 1.8; margin-top: 1rem;">${escapeHtml(eval.analysis)}</p>`;
+                if (evaluationData.analysis) html += `<p style="line-height: 1.8; margin-top: 1rem;">${escapeHtml(evaluationData.analysis)}</p>`;
                 html += '</div></div>';
             }
             

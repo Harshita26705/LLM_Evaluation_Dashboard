@@ -11,14 +11,18 @@
 <body>
     <!-- Header/Navigation -->
     <header class="header">
-        <a href="/" class="logo">LLM Evaluator</a>
+        <a href="/" class="logo">
+            <img class="logo-icon" src="{{ url_for('chrome_extension_icon') }}" alt="LLM Evaluator Logo">
+            <span class="logo-text">LLM Evaluator</span>
+        </a>
         <i class="fa-solid fa-bars" id="menu-icon"></i>
         <nav class="navbar">
             <a href="/" class="nav-link active">Home</a>
             <a href="/#features" class="nav-link">Features</a>
             <a href="/#about" class="nav-link">About</a>
             <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/learn-more" class="nav-link">Learn More</a>
+            <a href="/history" class="nav-link">History</a>
+            <a href="/analytics" class="nav-link">Analytics</a>
         </nav>
     </header>
 
@@ -34,6 +38,8 @@
             <div class="footer-links">
                 <a href="https://github.com/Harshita26705/LLM_Evaluation_Dashboard" target="_blank" title="Project Repository"><i class="fa-brands fa-github"></i></a>
                 <a href="/learn-more" title="Learn More"><i class="fa-solid fa-book"></i></a>
+                <a href="/history" title="History"><i class="fa-solid fa-clock-rotate-left"></i></a>
+                <a href="/analytics" title="Analytics"><i class="fa-solid fa-chart-simple"></i></a>
                 <a href="/dashboard" title="Go to Dashboard"><i class="fa-solid fa-chart-line"></i></a>
             </div>
         </div>

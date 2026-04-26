@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation History - LLM Evaluator{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero">
+    <div class="dashboard-header">
+        <h1>Evaluation <span>History</span></h1>
+        <p>Stored extension runs, trends, and metric profiles</p>
+    </div>
+</section>
+
+<section class="dashboard-container">
+    <div class="history-panel">
+        <div class="history-panel-header">
+            <div>
+                <h2>Evaluation History</h2>
+                <p>Every Chrome extension evaluation is stored here in the same row-based format used by CSV export.</p>
+            </div>
+            <div class="history-actions">
+                <button class="btn btn-secondary btn-sm" id="refreshHistoryBtn" type="button">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
+                <button class="btn btn-secondary btn-sm" id="downloadHistoryBtn" type="button">
+                    <i class="fa-solid fa-download"></i> Download CSV
+                </button>
+                <button class="btn btn-secondary btn-sm" id="clearHistoryBtn" type="button">
+                    <i class="fa-solid fa-trash"></i> Clear All
+                </button>
+            </div>
+        </div>
+
+        <div id="historySummaryCards" class="history-summary-cards"></div>
+
+        <div class="history-chart-grid">
+            <article class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Overall Score Trend</h3>
+                    <p>Average score per evaluation session</p>
+                </div>
+                <canvas id="historyTrendChart" height="140"></canvas>
+            </article>
+
+            <article class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Average Metric Profile</h3>
+                    <p>Mean metric values across stored sessions</p>
+                </div>
+                <canvas id="historyRadarChart" height="140"></canvas>
+            </article>
+        </div>
+
+        <div class="history-table-card">
+            <div class="history-table-header">
+                <div>
+                    <h3>Recent Evaluation Sessions</h3>
+                    <p>Latest stored runs from the extension. Messages = total chat messages processed, Rows = user-assistant evaluation pairs.</p>
+                </div>
+                <span id="historyCountLabel">0 sessions</span>
+            </div>
+            <div class="history-table-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Source</th>
+                            <th>Rows</th>
+                            <th>Avg Score</th>
+                            <th>Relevance</th>
+                            <th>Length</th>
+                            <th>Coherence</th>
+                            <th>Toxicity</th>
+                            <th>Bias</th>
+                            <th>Hallucination</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr>
+                            <td colspan="12" class="history-empty-state">Loading history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

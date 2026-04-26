@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Last Run Analytics - LLM Evaluator{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero">
+    <div class="dashboard-header">
+        <h1>Last Run <span>Analytics</span></h1>
+        <p>Deep analysis for the most recent extension evaluation run</p>
+    </div>
+</section>
+
+<section class="dashboard-container">
+    <div class="history-panel">
+        <div class="history-panel-header">
+            <div>
+                <h2>Session Analytics</h2>
+                <p>Includes row-wise metrics, trend charts, code analysis, and multimodal evaluation when images are detected.</p>
+            </div>
+            <div class="history-actions">
+                <button class="btn btn-secondary btn-sm" id="downloadAnalyticsBtn" type="button">
+                    <i class="fa-solid fa-download"></i> Download CSV
+                </button>
+                <button class="btn btn-secondary btn-sm" id="refreshAnalyticsBtn" type="button">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="analyticsSummaryCards" class="history-summary-cards"></div>
+
+        <div class="history-chart-grid">
+            <article class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Row-wise Overall Score</h3>
+                    <p>Overall score trend in the latest run</p>
+                </div>
+                <canvas id="analyticsTrendChart" height="140"></canvas>
+            </article>
+
+            <article class="chart-card">
+                <div class="chart-card-header">
+                    <h3>Average Metric Distribution</h3>
+                    <p>Average values for all core metrics in last run</p>
+                </div>
+                <canvas id="analyticsAverageChart" height="140"></canvas>
+            </article>
+        </div>
+
+        <div class="history-table-card">
+            <div class="history-table-header">
+                <div>
+                    <h3>Latest Run Rows</h3>
+                    <p>Q/A pairs and computed metrics from last session (Messages = individual rows)</p>
+                </div>
+                <span id="analyticsCountLabel">0 rows</span>
+            </div>
+            <div class="history-table-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Timestamp</th>
+                            <th>Question</th>
+                            <th>Response</th>
+                            <th>Overall</th>
+                            <th>Relevance</th>
+                            <th>Coherence</th>
+                            <th>Toxicity</th>
+                            <th>Bias</th>
+                            <th>Hallucination</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analyticsTableBody">
+                        <tr>
+                            <td colspan="10" class="history-empty-state">Loading analytics...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-panel">
+        <div class="history-panel-header">
+            <div>
+                <h2>Code Analysis Report</h2>
+                <p>Generated when code-like responses are found in the last run.</p>
+            </div>
+            <span id="codeAnalysisCountLabel" class="history-summary-value" style="font-size: 2rem;">0</span>
+        </div>
+        <div id="codeAnalysisContainer" class="results-grid">
+            <div class="history-empty-state">No code analysis available yet.</div>
+        </div>
+    </div>
+
+    <div class="history-panel">
+        <div class="history-panel-header">
+            <div>
+                <h2>Multimodal Evaluation</h2>
+                <p>Generated when image URLs are found in the last run responses.</p>
+            </div>
+            <span id="multimodalCountLabel" class="history-summary-value" style="font-size: 2rem;">0</span>
+        </div>
+        <div id="multimodalContainer" class="results-grid">
+            <div class="history-empty-state">No image-based responses detected in last run.</div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Highlight.js for code syntax highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+<script>if(window.hljs){window.hljs.highlightAll();}</script>
+{% endblock %}

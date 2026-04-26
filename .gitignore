@@ -7,6 +7,8 @@ __pycache__/
 venv/
 env/
 ENV/
+.venv/
+.venv311/
 
 # IDE
 .vscode/

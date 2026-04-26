@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-cd /d "C:\Users\HarshitaSuri\OneDrive - CG Infinity\Desktop\LLM_Dashboard"
+cd /d "%~dp0"
 
 echo.
 echo ====================================
@@ -10,6 +10,10 @@ echo.
 echo Starting Flask server...
 echo.
 
-.\.venv\Scripts\python.exe flask_app.py
+if exist ".\.venv\Scripts\python.exe" (
+	.\.venv\Scripts\python.exe flask_app.py
+) else (
+	python flask_app.py
+)
 
 pause

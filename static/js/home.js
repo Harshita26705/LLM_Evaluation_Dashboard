@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Animate elements on scroll
     const observerOptions = {
         threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px"
+        rootMargin: "0rem 0rem -3.125rem 0rem"
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -26,21 +26,3 @@ document.addEventListener("DOMContentLoaded", () => {
         observer.observe(box);
     });
 });
-
-// Add visible class styling
-const style = document.createElement("style");
-style.textContent = `
-    .feature-card,
-    .stat-box {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .feature-card.visible,
-    .stat-box.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-`;
-document.head.appendChild(style);
