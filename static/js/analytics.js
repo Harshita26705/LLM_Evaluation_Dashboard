@@ -1,6 +1,48 @@
 let analyticsTrendChart = null;
 let analyticsAverageChart = null;
 let lastAnalyticsData = null;
+const ANALYTICS_CACHE_PREFIX = 'analytics:session:';
+
+function getSessionIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('session_id');
+}
+
+function getAnalyticsCacheKey(sessionId) {
+    return `${ANALYTICS_CACHE_PREFIX}${sessionId || '__latest__'}`;
+}
+
+function readAnalyticsCache(sessionId) {
+    try {
+        const raw = sessionStorage.getItem(getAnalyticsCacheKey(sessionId));
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+            return null;
+        }
+        return parsed;
+    } catch (error) {
+        return null;
+    }
+}
+
+function writeAnalyticsCache(sessionId, payload) {
+    try {
+        sessionStorage.setItem(getAnalyticsCacheKey(sessionId), JSON.stringify(payload));
+    } catch (error) {
+        // Ignore storage quota/session errors.
+    }
+}
+
+function clearAnalyticsCache(sessionId) {
+    try {
+        sessionStorage.removeItem(getAnalyticsCacheKey(sessionId));
+    } catch (error) {
+        // Ignore storage/session errors.
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('analyticsSummaryCards')) {
@@ -23,6 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadLastRunAnalytics(forceReload = false) {
     const summaryCards = document.getElementById('analyticsSummaryCards');
     const tableBody = document.getElementById('analyticsTableBody');
+    const sessionId = getSessionIdFromUrl();
+
+    if (!forceReload) {
+        const cached = readAnalyticsCache(sessionId);
+        if (cached && cached.core) {
+            renderAnalyticsDashboard(cached.core);
+            if (cached.details) {
+                renderCodeAnalysis(cached.details.code_analysis || {});
+                renderMultimodal(cached.details.multimodal || {});
+            }
+            return;
+        }
+    } else {
+        clearAnalyticsCache(sessionId);
+    }
 
     if (summaryCards) {
         summaryCards.innerHTML = '<div class="history-loading">Loading last run analytics...</div>';
@@ -32,8 +89,6 @@ async function loadLastRunAnalytics(forceReload = false) {
     }
 
     try {
-        const params = new URLSearchParams(window.location.search);
-        const sessionId = params.get('session_id');
         const endpoint = sessionId
             ? `/api/analytics-last-run?session_id=${encodeURIComponent(sessionId)}`
             : '/api/analytics-last-run';
@@ -48,6 +103,8 @@ async function loadLastRunAnalytics(forceReload = false) {
         }
 
         renderAnalyticsDashboard(data);
+        writeAnalyticsCache(sessionId, { core: data, details: null });
+        loadAnalyticsDetails(sessionId, forceReload);
     } catch (error) {
         console.error('Failed to load analytics:', error);
         if (summaryCards) {
@@ -56,6 +113,45 @@ async function loadLastRunAnalytics(forceReload = false) {
         if (tableBody) {
             tableBody.innerHTML = '<tr><td colspan="10" class="history-empty-state">Unable to load analytics.</td></tr>';
         }
+    }
+}
+
+async function loadAnalyticsDetails(sessionId, forceReload = false) {
+    try {
+        if (!forceReload) {
+            const cached = readAnalyticsCache(sessionId);
+            if (cached && cached.details) {
+                renderCodeAnalysis(cached.details.code_analysis || {});
+                renderMultimodal(cached.details.multimodal || {});
+                return;
+            }
+        }
+
+        const params = new URLSearchParams();
+        if (sessionId) {
+            params.set('session_id', sessionId);
+        }
+        params.set('include_details', '1');
+
+        const response = await fetch(`/api/analytics-last-run?${params.toString()}`, {
+            headers: forceReload ? { 'Cache-Control': 'no-cache' } : {}
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || `Unable to load analytics details (HTTP ${response.status})`);
+        }
+
+        renderCodeAnalysis(data.code_analysis || {});
+        renderMultimodal(data.multimodal || {});
+
+        const cached = readAnalyticsCache(sessionId) || {};
+        writeAnalyticsCache(sessionId, {
+            core: cached.core || null,
+            details: data,
+        });
+    } catch (error) {
+        console.error('Failed to load analytics details:', error);
     }
 }
 
@@ -84,8 +180,6 @@ function renderAnalyticsDashboard(data) {
     renderTrendChart(data.trend_points || []);
     renderAverageChart(summary);
     renderRowsTable(rows, data);
-    renderCodeAnalysis(data.code_analysis || {});
-    renderMultimodal(data.multimodal || {});
 }
 
 function renderEmptyAnalytics(message) {

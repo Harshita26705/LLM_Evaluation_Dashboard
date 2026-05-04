@@ -113,6 +113,27 @@ SUMMARY_KEYS: list[str] = [
     "average_score",
 ]
 
+_HISTORY_ROWS_CACHE_MTIME: float | None = None
+_HISTORY_ROWS_CACHE_FRAME: pd.DataFrame | None = None
+_HISTORY_SESSIONS_CACHE_MTIME: float | None = None
+_HISTORY_SESSIONS_CACHE_DATA: list[dict[str, Any]] | None = None
+_ANALYTICS_RESPONSE_CACHE: dict[str, tuple[tuple[float, float], dict[str, Any]]] = {}
+
+
+def _get_mtime(path: str) -> float:
+    try:
+        return os.path.getmtime(path) if os.path.exists(path) else -1.0
+    except Exception:
+        return -1.0
+
+
+def _history_cache_signature() -> tuple[float, float]:
+    return (_get_mtime(HISTORY_CSV_PATH), _get_mtime(HISTORY_SESSIONS_PATH))
+
+
+def _invalidate_analytics_cache() -> None:
+    _ANALYTICS_RESPONSE_CACHE.clear()
+
 
 def _ensure_history_storage() -> None:
     os.makedirs(HISTORY_DIR, exist_ok=True)
@@ -128,8 +149,16 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 
 
 def _load_history_rows() -> pd.DataFrame:
+    global _HISTORY_ROWS_CACHE_FRAME, _HISTORY_ROWS_CACHE_MTIME
+
     if not os.path.exists(HISTORY_CSV_PATH):
+        _HISTORY_ROWS_CACHE_FRAME = pd.DataFrame(columns=HISTORY_COLUMNS)
+        _HISTORY_ROWS_CACHE_MTIME = -1.0
         return pd.DataFrame(columns=HISTORY_COLUMNS)
+
+    mtime = _get_mtime(HISTORY_CSV_PATH)
+    if _HISTORY_ROWS_CACHE_FRAME is not None and _HISTORY_ROWS_CACHE_MTIME == mtime:
+        return _HISTORY_ROWS_CACHE_FRAME.copy(deep=True)
 
     try:
         frame: Any = pd.read_csv(HISTORY_CSV_PATH)
@@ -140,12 +169,23 @@ def _load_history_rows() -> pd.DataFrame:
         if column not in frame.columns:
             frame[column] = ""
 
-    return cast(pd.DataFrame, frame.loc[:, HISTORY_COLUMNS])
+    normalized = cast(pd.DataFrame, frame.loc[:, HISTORY_COLUMNS]).copy()
+    _HISTORY_ROWS_CACHE_FRAME = normalized
+    _HISTORY_ROWS_CACHE_MTIME = mtime
+    return normalized.copy(deep=True)
 
 
 def _load_history_sessions() -> list[dict[str, Any]]:
+    global _HISTORY_SESSIONS_CACHE_DATA, _HISTORY_SESSIONS_CACHE_MTIME
+
     if not os.path.exists(HISTORY_SESSIONS_PATH):
+        _HISTORY_SESSIONS_CACHE_DATA = []
+        _HISTORY_SESSIONS_CACHE_MTIME = -1.0
         return []
+
+    mtime = _get_mtime(HISTORY_SESSIONS_PATH)
+    if _HISTORY_SESSIONS_CACHE_DATA is not None and _HISTORY_SESSIONS_CACHE_MTIME == mtime:
+        return [dict(session) for session in _HISTORY_SESSIONS_CACHE_DATA]
 
     try:
         with open(HISTORY_SESSIONS_PATH, "r", encoding="utf-8") as handle:
@@ -157,18 +197,27 @@ def _load_history_sessions() -> list[dict[str, Any]]:
             for session in sessions_raw:
                 if isinstance(session, Mapping):
                     valid_sessions.append(dict(session))
-            return valid_sessions
+            _HISTORY_SESSIONS_CACHE_DATA = valid_sessions
+            _HISTORY_SESSIONS_CACHE_MTIME = mtime
+            return [dict(session) for session in valid_sessions]
     except Exception:
         return []
 
 
 def _save_history_sessions(sessions: list[dict[str, Any]]) -> None:
+    global _HISTORY_SESSIONS_CACHE_DATA, _HISTORY_SESSIONS_CACHE_MTIME
+
     _ensure_history_storage()
     with open(HISTORY_SESSIONS_PATH, "w", encoding="utf-8") as handle:
         json.dump(sessions, handle, indent=2)
+    _HISTORY_SESSIONS_CACHE_DATA = [dict(session) for session in sessions]
+    _HISTORY_SESSIONS_CACHE_MTIME = _get_mtime(HISTORY_SESSIONS_PATH)
+    _invalidate_analytics_cache()
 
 
 def _save_history_rows(frame: pd.DataFrame) -> None:
+    global _HISTORY_ROWS_CACHE_FRAME, _HISTORY_ROWS_CACHE_MTIME
+
     _ensure_history_storage()
     for column in HISTORY_COLUMNS:
         if column not in frame.columns:
@@ -177,13 +226,24 @@ def _save_history_rows(frame: pd.DataFrame) -> None:
     normalized = cast(pd.DataFrame, frame.loc[:, HISTORY_COLUMNS]).copy()
     normalized["Id"] = list(range(1, len(normalized) + 1))
     normalized.to_csv(HISTORY_CSV_PATH, index=False)
+    _HISTORY_ROWS_CACHE_FRAME = normalized
+    _HISTORY_ROWS_CACHE_MTIME = _get_mtime(HISTORY_CSV_PATH)
+    _invalidate_analytics_cache()
 
 
 def _clear_history_storage() -> None:
+    global _HISTORY_ROWS_CACHE_FRAME, _HISTORY_ROWS_CACHE_MTIME
+    global _HISTORY_SESSIONS_CACHE_DATA, _HISTORY_SESSIONS_CACHE_MTIME
+
     if os.path.exists(HISTORY_CSV_PATH):
         os.remove(HISTORY_CSV_PATH)
     if os.path.exists(HISTORY_SESSIONS_PATH):
         os.remove(HISTORY_SESSIONS_PATH)
+    _HISTORY_ROWS_CACHE_FRAME = pd.DataFrame(columns=HISTORY_COLUMNS)
+    _HISTORY_ROWS_CACHE_MTIME = -1.0
+    _HISTORY_SESSIONS_CACHE_DATA = []
+    _HISTORY_SESSIONS_CACHE_MTIME = -1.0
+    _invalidate_analytics_cache()
 
 
 def _delete_history_session(session_id: str) -> bool:
@@ -296,7 +356,7 @@ def _append_evaluation_history(payload: Mapping[str, Any]) -> dict[str, Any]:
         ]
         if normalized_rows:
             combined: pd.DataFrame = pd.concat([existing_rows, pd.DataFrame(normalized_rows)], ignore_index=True)
-            combined.to_csv(HISTORY_CSV_PATH, index=False)
+            _save_history_rows(combined)
             row_count: int = len(normalized_rows)
 
     sessions: list[dict[str, Any]] = _load_history_sessions()
@@ -434,6 +494,118 @@ def _build_last_run_summary(rows: list[dict[str, Any]]) -> dict[str, float]:
     for metric in metrics:
         summary[metric] = round(sum(_safe_float(row.get(metric)) for row in rows) / len(rows), 3)
     return summary
+
+
+def _build_analytics_payload(requested_session_id: str | None, include_details: bool) -> dict[str, Any]:
+    latest_session, rows = _load_session_rows(requested_session_id)
+    if latest_session is None:
+        return {"success": True, "has_data": False, "message": "No stored runs yet"}
+
+    summary = _build_last_run_summary(rows)
+
+    code_reports: list[dict[str, Any]] = []
+    multimodal_reports: list[dict[str, Any]] = []
+
+    if include_details:
+        ensure_models_loaded()
+        for row in rows:
+            response_text = str(row.get("response", ""))
+            question_text = str(row.get("question", ""))
+            row_id = int(_safe_float(row.get("Id"), 0))
+            row_response_image_urls = [
+                str(url)
+                for url in cast(list[Any], row.get("response_image_urls", []))
+                if str(url).strip()
+            ]
+
+            code_blocks = _extract_code_blocks(response_text)
+            for block_index, code_block_entry in enumerate(code_blocks[:3], start=1):
+                code_block = str(code_block_entry.get("code", ""))
+                language = _normalize_language(str(code_block_entry.get("language", "")))
+                if not _is_supported_code_language(language, code_block):
+                    continue
+
+                report = check_code_quality(code_block)
+                code_reports.append({
+                    "row_id": row_id,
+                    "block_index": block_index,
+                    "language": language or "python",
+                    "snippet": code_block[:500],
+                    "report": report,
+                })
+
+            image_urls = list(dict.fromkeys(_merge_unique_urls(_extract_image_urls(response_text), row_response_image_urls)))
+            for image_url in image_urls[:2]:
+                image_data = _fetch_image_as_data_url(image_url)
+                if image_data is None:
+                    multimodal_reports.append({
+                        "row_id": row_id,
+                        "image_url": image_url,
+                        "success": False,
+                        "error": "Could not fetch image data for multimodal evaluation",
+                    })
+                    continue
+
+                metrics, image_props, _, explanation = multimodal_evaluate(image_data, question_text, response_text)
+                multimodal_reports.append({
+                    "row_id": row_id,
+                    "image_url": image_url,
+                    "success": metrics is not None,
+                    "metrics": metrics or {},
+                    "image_properties": image_props,
+                    "explanation": explanation,
+                })
+
+    trend_points = [
+        {
+            "id": row.get("Id", index + 1),
+            "label": f"Pair {index + 1}",
+            "overall_score": row.get("overall_score", 0),
+            "relevance": row.get("relevance", 0),
+            "coherence": row.get("coherence", 0),
+            "toxicity": row.get("toxicity", 0),
+            "bias": row.get("bias", 0),
+            "hallucination": row.get("hallucination", 0),
+        }
+        for index, row in enumerate(rows)
+    ]
+
+    return {
+        "success": True,
+        "has_data": True,
+        "session": latest_session,
+        "rows": rows,
+        "summary": summary,
+        "trend_points": trend_points,
+        "details_loaded": include_details,
+        "code_analysis": {
+            "found": len(code_reports) > 0 if include_details else None,
+            "count": len(code_reports) if include_details else 0,
+            "reports": code_reports,
+        },
+        "multimodal": {
+            "found": len(multimodal_reports) > 0 if include_details else None,
+            "count": len(multimodal_reports) if include_details else 0,
+            "reports": multimodal_reports,
+        },
+    }
+
+
+def _prewarm_analytics_cache_for_session(session_id: str) -> None:
+    signature = _history_cache_signature()
+
+    core_payload = _build_analytics_payload(session_id, include_details=False)
+    details_payload = _build_analytics_payload(session_id, include_details=True)
+
+    session_cache_key_core = f"{session_id}:0"
+    session_cache_key_details = f"{session_id}:1"
+    latest_cache_key_core = "__latest__:0"
+    latest_cache_key_details = "__latest__:1"
+
+    _ANALYTICS_RESPONSE_CACHE[session_cache_key_core] = (signature, core_payload)
+    _ANALYTICS_RESPONSE_CACHE[session_cache_key_details] = (signature, details_payload)
+    _ANALYTICS_RESPONSE_CACHE[latest_cache_key_core] = (signature, core_payload)
+    _ANALYTICS_RESPONSE_CACHE[latest_cache_key_details] = (signature, details_payload)
 
 
 def _extract_code_blocks(text: str) -> list[dict[str, str]]:
@@ -1494,6 +1666,9 @@ def api_evaluation_history():
                 'summary': data.get('summary')
             })
 
+            # Warm analytics cache immediately after extension run is persisted.
+            _prewarm_analytics_cache_for_session(str(session_entry.get('session_id', '')))
+
             return jsonify({
                 "success": True,
                 "session": session_entry
@@ -1566,98 +1741,17 @@ def api_delete_evaluation_history_session_post(session_id: str):
 def api_analytics_last_run():
     """Return analytics payload for the most recent stored extension run."""
     try:
-        ensure_models_loaded()
         requested_session_id = (request.args.get("session_id") or "").strip() or None
-        latest_session, rows = _load_session_rows(requested_session_id)
-        if latest_session is None:
-            return jsonify({"success": True, "has_data": False, "message": "No stored runs yet"})
+        include_details = (request.args.get("include_details") or "").strip().lower() in {"1", "true", "yes", "on"}
+        signature = _history_cache_signature()
+        cache_key = f"{requested_session_id or '__latest__'}:{1 if include_details else 0}"
+        cached = _ANALYTICS_RESPONSE_CACHE.get(cache_key)
+        if cached and cached[0] == signature:
+            return jsonify(cached[1])
 
-        summary = _build_last_run_summary(rows)
-
-        code_reports: list[dict[str, Any]] = []
-        multimodal_reports: list[dict[str, Any]] = []
-
-        for row in rows:
-            response_text = str(row.get("response", ""))
-            question_text = str(row.get("question", ""))
-            row_id = int(_safe_float(row.get("Id"), 0))
-            row_response_image_urls = [
-                str(url)
-                for url in cast(list[Any], row.get("response_image_urls", []))
-                if str(url).strip()
-            ]
-
-            code_blocks = _extract_code_blocks(response_text)
-            for block_index, code_block_entry in enumerate(code_blocks[:3], start=1):
-                code_block = str(code_block_entry.get("code", ""))
-                language = _normalize_language(str(code_block_entry.get("language", "")))
-                if not _is_supported_code_language(language, code_block):
-                    continue
-
-                report = check_code_quality(code_block)
-                code_reports.append({
-                    "row_id": row_id,
-                    "block_index": block_index,
-                    "language": language or "python",
-                    "snippet": code_block[:500],
-                    "report": report,
-                })
-
-            # Deduplicate image URLs per row
-            image_urls = list(dict.fromkeys(_merge_unique_urls(_extract_image_urls(response_text), row_response_image_urls)))
-            for image_url in image_urls[:2]:
-                image_data = _fetch_image_as_data_url(image_url)
-                if image_data is None:
-                    multimodal_reports.append({
-                        "row_id": row_id,
-                        "image_url": image_url,
-                        "success": False,
-                        "error": "Could not fetch image data for multimodal evaluation",
-                    })
-                    continue
-
-                metrics, image_props, _, explanation = multimodal_evaluate(image_data, question_text, response_text)
-                multimodal_reports.append({
-                    "row_id": row_id,
-                    "image_url": image_url,
-                    "success": metrics is not None,
-                    "metrics": metrics or {},
-                    "image_properties": image_props,
-                    "explanation": explanation,
-                })
-
-        trend_points = [
-            {
-                "id": row.get("Id", index + 1),
-                "label": f"Pair {index + 1}",
-                "overall_score": row.get("overall_score", 0),
-                "relevance": row.get("relevance", 0),
-                "coherence": row.get("coherence", 0),
-                "toxicity": row.get("toxicity", 0),
-                "bias": row.get("bias", 0),
-                "hallucination": row.get("hallucination", 0),
-            }
-            for index, row in enumerate(rows)
-        ]
-
-        return jsonify({
-            "success": True,
-            "has_data": True,
-            "session": latest_session,
-            "rows": rows,
-            "summary": summary,
-            "trend_points": trend_points,
-            "code_analysis": {
-                "found": len(code_reports) > 0,
-                "count": len(code_reports),
-                "reports": code_reports,
-            },
-            "multimodal": {
-                "found": len(multimodal_reports) > 0,
-                "count": len(multimodal_reports),
-                "reports": multimodal_reports,
-            },
-        })
+        payload = _build_analytics_payload(requested_session_id, include_details)
+        _ANALYTICS_RESPONSE_CACHE[cache_key] = (signature, payload)
+        return jsonify(payload)
     except Exception as exc:
         return jsonify({"success": False, "error": f"Last-run analytics failed: {str(exc)}"}), 500
 

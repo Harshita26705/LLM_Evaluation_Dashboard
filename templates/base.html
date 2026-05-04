@@ -12,17 +12,17 @@
     <!-- Header/Navigation -->
     <header class="header">
         <a href="/" class="logo">
-            <img class="logo-icon" src="{{ url_for('chrome_extension_icon') }}" alt="LLM Evaluator Logo">
+            <i class="fa-solid fa-puzzle-piece logo-icon"></i>
             <span class="logo-text">LLM Evaluator</span>
         </a>
         <i class="fa-solid fa-bars" id="menu-icon"></i>
         <nav class="navbar">
-            <a href="/" class="nav-link active">Home</a>
+            <a href="/" class="nav-link{% if request.path == '/' %} active{% endif %}">Home</a>
             <a href="/#features" class="nav-link">Features</a>
             <a href="/#about" class="nav-link">About</a>
-            <a href="/dashboard" class="nav-link">Dashboard</a>
-            <a href="/history" class="nav-link">History</a>
-            <a href="/analytics" class="nav-link">Analytics</a>
+            <a href="/dashboard" class="nav-link{% if request.path.startswith('/dashboard') %} active{% endif %}">Dashboard</a>
+            <a href="/history" class="nav-link{% if request.path.startswith('/history') %} active{% endif %}">History</a>
+            <a href="/analytics" class="nav-link{% if request.path.startswith('/analytics') %} active{% endif %}">Analytics</a>
         </nav>
     </header>
 

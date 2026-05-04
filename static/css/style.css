@@ -78,11 +78,13 @@ body {
 }
 
 .logo .logo-icon {
-    width: 2.8rem;
-    height: 2.8rem;
-    border-radius: 0.4rem;
-    box-shadow: 0 0 0.8rem rgba(0, 240, 255, 0.25);
+    font-size: 2rem;
+    color: var(--main-color);
+    filter: drop-shadow(0 0 0.5rem rgba(0, 240, 255, 0.5));
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    line-height: 1;
 }
 
 .logo .logo-text {
@@ -372,7 +374,7 @@ section {
 
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2.5rem;
     margin-top: 0;
 }
@@ -544,7 +546,9 @@ section {
     text-align: center;
     border-bottom: 0.125rem solid var(--main-color);
     margin-top: 0;
-    padding-top: 11rem;
+    padding: 8rem 0 2rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .dashboard-header h1 {
@@ -562,9 +566,21 @@ section {
 }
 
 .dashboard-container {
-    max-width: 120rem;
-    margin: 5rem auto;
-    padding: 0 2rem;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+section.dashboard-container {
+    min-height: auto;
+    display: block;
+    justify-content: flex-start;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1.6rem;
+    padding-bottom: 3rem;
 }
 
 .history-panel {
@@ -778,11 +794,11 @@ section {
     display: flex;
     /* flex-wrap: wrap; */
     gap: 1rem;
-    margin-bottom: 3rem;
+    margin-bottom: 0;
     border-bottom: 0.125rem solid var(--snd-bg-color);
-    padding-bottom: 1rem;
+    padding-bottom: 0;
     position: sticky;
-    top: 4.375rem;
+    top: 6rem;
     background: var(--bg-color);
     z-index: 50;
     padding-top: 1rem;
@@ -790,22 +806,26 @@ section {
 
 .sticky-tabs {
     position: sticky;
-    top: 7rem;
+    top: 6rem;
     z-index: 51;
     background: var(--bg-color);
     border-bottom: 0.125rem solid var(--snd-bg-color);
     display: flex;
-    gap: 1rem;
-    padding: 1rem 9%;
+    gap: 0.8rem;
+    width: 100%;
+    padding: 1rem 0;
     margin: 0;
     overflow-x: auto;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .dataset-upload-bar {
     width: 100%;
     margin: 0 0 2rem;
     padding: 1.2rem 1.6rem;
+    max-width: none;
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 1.2rem 1.6rem;
@@ -813,6 +833,8 @@ section {
     border: 0.0625rem solid rgba(0, 240, 255, 0.2);
     border-radius: 1rem;
     background: linear-gradient(180deg, rgba(0, 240, 255, 0.08) 0%, rgba(38, 43, 64, 0.92) 100%);
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .dataset-upload-primary {
@@ -875,6 +897,9 @@ section {
     transition: var(--transition);
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-width: 0;
     gap: 0.5rem;
 }
 
@@ -915,6 +940,8 @@ section {
     border-radius: var(--border-radius);
     border: 0.125rem solid rgba(0, 240, 255, 0.2);
     min-height: 55rem;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .eval-input,
@@ -1122,6 +1149,115 @@ section {
     overflow: auto;
 }
 
+
+@media (max-width: 75rem) {
+    .features-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 100rem) {
+    .home {
+        display: grid;
+        grid-template-columns: minmax(58rem, 1.05fr) minmax(44rem, 0.95fr);
+        align-items: center;
+        column-gap: 6rem;
+    }
+
+    .home-content {
+        max-width: 72rem;
+    }
+
+    .home-content h1 {
+        font-size: clamp(5.8rem, 3.6vw, 7.4rem);
+        line-height: 1.18;
+    }
+
+    .home-content h3 {
+        font-size: clamp(3.3rem, 2.2vw, 4.2rem);
+    }
+
+    .home-content p {
+        font-size: clamp(1.8rem, 1.2vw, 2.2rem);
+        max-width: 66rem;
+    }
+
+    .hero-visual {
+        width: min(46rem, 100%);
+        max-width: 46rem;
+        height: 46rem;
+        margin-left: 0;
+        justify-self: center;
+    }
+
+    .blob-shape {
+        width: 34rem;
+        height: 34rem;
+        margin-top: 0;
+    }
+
+    .card-1 {
+        top: 3rem;
+        left: 2.5rem;
+        margin-top: 0;
+    }
+
+    .card-2 {
+        top: 10rem;
+        right: 1.5rem;
+        margin-top: 0;
+    }
+
+    .card-3 {
+        bottom: 3rem;
+        left: 50%;
+        margin-left: -8rem;
+        margin-top: 0;
+    }
+
+    .sticky-tabs {
+        justify-content: stretch;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .dashboard-container {
+        margin-top: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .dataset-upload-bar {
+        max-width: none;
+        margin: 0 0 2.4rem;
+        padding: 1.8rem 2.2rem;
+        grid-template-columns: minmax(30rem, 0.45fr) 1fr;
+        gap: 1.4rem 2rem;
+    }
+
+    .dataset-question-picker label {
+        font-size: 1.3rem;
+    }
+
+    .dataset-question-picker select {
+        min-height: 4.8rem;
+        font-size: 1.5rem;
+    }
+
+    .dataset-upload-status {
+        font-size: 1.3rem;
+    }
+
+    .tab-content {
+        min-height: 68rem;
+    }
+
+    .eval-container {
+        min-height: 64rem;
+        padding: 3.8rem;
+        gap: 3.6rem;
+    }
+}
 .result-item {
     background: var(--bg-color);
     padding: 1.5rem;
@@ -1474,6 +1610,10 @@ section {
 
     .eval-container {
         grid-template-columns: 1fr;
+    }
+
+    .dashboard-container {
+        padding: 0;
     }
 
     .footer-content {
